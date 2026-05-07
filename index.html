@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TouchDesigner — Guía Profesional para Animadores y Artistas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────────── */
+:root{
+  --bg:#F5F2EB;--bg2:#EBE7DD;--bg3:#E0DBD0;--bgd:#1C1814;
+  --ink:#18140F;--ink2:#4A4438;--ink3:#8A8070;
+  --amber:#C47A0A;--amber-l:#FDF5DC;--amber-d:#8A5006;
+  --teal:#0A6858;--teal-l:#E0F2EE;--teal-m:#2A9080;
+  --slate:#2A4060;--slate-l:#E8EEF6;
+  --rose:#A03050;--rose-l:#FAEAEE;
+  --jade:#208050;--jade-l:#E4F5EC;
+  --sand:#D0C8B0;--rule:rgba(24,20,15,.1);
+  /* operator family colors */
+  --top:#2060A0;--top-l:#DCF0FF;--top-bg:#0A2A4A;
+  --chop:#207840;--chop-l:#DCFFEC;--chop-bg:#0A2A18;
+  --sop:#904020;--sop-l:#FFE8D8;--sop-bg:#3A1808;
+  --dat:#8A6808;--dat-l:#FFF8D0;--dat-bg:#3A2A04;
+  --comp:#502890;--comp-l:#F0E8FF;--comp-bg:#20104A;
+  --mat:#902060;--mat-l:#FFE8F5;--mat-bg:#3A0A28;
+  --pop:#208880;--pop-l:#D8FFF8;--pop-bg:#083830;
+  /* layout */
+  --sidebar:260px;--content:860px;--nav-h:56px;
+  /* timing */
+  --ease:.25s cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;line-height:1.65;overflow-x:hidden}
+
+/* ─── TOPBAR ─── */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(245,242,235,.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);z-index:300;
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+}
+.tb-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:var(--amber);white-space:nowrap;flex-shrink:0}
+.tb-logo span{font-style:normal;color:var(--ink3);font-size:12px;margin-left:8px;font-family:'DM Sans',sans-serif}
+.tb-spacer{flex:1}
+.tb-links{display:flex;gap:4px;align-items:center}
+.tb-link{font-size:11px;color:var(--ink3);text-decoration:none;padding:5px 10px;border-radius:4px;transition:background var(--ease),color var(--ease);white-space:nowrap}
+.tb-link:hover{background:var(--bg2);color:var(--ink)}
+.tb-link.external::after{content:'↗';margin-left:3px;font-size:10px}
+.hamburger{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:4px}
+.hamburger span{width:20px;height:2px;background:var(--ink3);border-radius:2px;transition:var(--ease)}
+
+/* ─── SIDEBAR ─── */
+#sidebar{
+  position:fixed;top:var(--nav-h);left:0;bottom:0;
+  width:var(--sidebar);overflow-y:auto;
+  background:var(--bg2);border-right:1px solid var(--rule);
+  padding:24px 0 40px;z-index:200;
+  scrollbar-width:thin;scrollbar-color:var(--sand) transparent;
+}
+#sidebar::-webkit-scrollbar{width:4px}
+#sidebar::-webkit-scrollbar-thumb{background:var(--sand);border-radius:2px}
+.sb-section{padding:0 0 8px}
+.sb-label{font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);padding:12px 20px 6px;display:block}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 20px;text-decoration:none;color:var(--ink2);font-size:12.5px;transition:background var(--ease),color var(--ease);border-left:2px solid transparent;cursor:pointer}
+.sb-item:hover,.sb-item.active{background:var(--bg);color:var(--amber);border-left-color:var(--amber)}
+.sb-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.sb-item .sb-dot{background:var(--sand)}
+.sb-item.active .sb-dot,.sb-item:hover .sb-dot{background:var(--amber)}
+.sb-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);min-width:22px}
+.sb-item.active .sb-num{color:var(--amber)}
+.sb-progress{height:2px;background:var(--bg3);margin:0 20px 4px;border-radius:1px;overflow:hidden}
+.sb-progress-bar{height:100%;background:var(--amber);width:0%;transition:width .4s ease;border-radius:1px}
+
+/* ─── MAIN ─── */
+#main{
+  margin-left:var(--sidebar);margin-top:var(--nav-h);
+  max-width:calc(var(--sidebar) + var(--content));
+}
+.page{display:none;padding:52px 48px 80px;max-width:var(--content);min-height:calc(100vh - var(--nav-h))}
+.page.active{display:block}
+
+/* ─── PAGE TYPOGRAPHY ─── */
+.page-kicker{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:16px;display:block}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(30px,4vw,48px);font-weight:700;line-height:1.1;margin-bottom:20px}
+.page-title em{font-style:italic;color:var(--amber)}
+.page-sub{font-size:16px;color:var(--ink2);max-width:600px;line-height:1.75;margin-bottom:40px}
+h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;margin:48px 0 16px;color:var(--ink);padding-top:8px}
+h2:first-child{margin-top:0}
+h3{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:32px 0 12px}
+h3:first-child{margin-top:0}
+h4{font-size:14px;font-weight:600;color:var(--ink);margin:20px 0 8px}
+p{color:var(--ink2);margin-bottom:14px;line-height:1.72}
+p:last-child{margin-bottom:0}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'DM Mono',monospace;font-size:.82em;background:var(--bg3);padding:2px 6px;border-radius:3px;color:var(--teal)}
+strong{color:var(--ink);font-weight:600}
+
+/* ─── DIVIDERS / SECTIONS ─── */
+.section-rule{border:none;border-top:1px solid var(--rule);margin:40px 0}
+
+/* ─── CALLOUTS ─── */
+.callout{border-left:3px solid var(--amber);background:var(--amber-l);padding:14px 18px;border-radius:0 4px 4px 0;margin:18px 0}
+.callout.teal{border-left-color:var(--teal);background:var(--teal-l)}
+.callout.slate{border-left-color:var(--slate);background:var(--slate-l)}
+.callout.rose{border-left-color:var(--rose);background:var(--rose-l)}
+.callout.jade{border-left-color:var(--jade);background:var(--jade-l)}
+.callout .c-label{font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:5px}
+.callout.teal .c-label{color:var(--teal)}
+.callout.slate .c-label{color:var(--slate)}
+.callout.rose .c-label{color:var(--rose)}
+.callout.jade .c-label{color:var(--jade)}
+.callout p{font-size:13.5px;margin:0;color:var(--ink)}
+
+/* ─── OPERATOR FAMILY CARDS ─── */
+.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:20px 0;border-radius:6px;overflow:hidden}
+.op-card{background:var(--bg);padding:20px;transition:background var(--ease)}
+.op-card:hover{background:var(--bg2)}
+.op-badge{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;margin-bottom:12px}
+.op-badge.top{background:var(--top-l);color:var(--top)}
+.op-badge.chop{background:var(--chop-l);color:var(--chop)}
+.op-badge.sop{background:var(--sop-l);color:var(--sop)}
+.op-badge.dat{background:var(--dat-l);color:var(--dat)}
+.op-badge.comp{background:var(--comp-l);color:var(--comp)}
+.op-badge.mat{background:var(--mat-l);color:var(--mat)}
+.op-badge.pop{background:var(--pop-l);color:var(--pop)}
+.op-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.op-full{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px}
+.op-desc{font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:10px}
+.op-eg{font-size:11.5px;color:var(--ink3);font-style:italic;border-top:1px solid var(--rule);padding-top:8px}
+.op-link{font-size:10.5px;color:var(--teal);display:block;margin-top:6px}
+
+/* ─── NODE DIAGRAM ─── */
+.diagram-wrap{background:#0F1318;border-radius:8px;padding:20px 16px 18px;margin:20px 0;overflow-x:auto}
+.diagram-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px;font-family:'DM Mono',monospace}
+.diagram-wrap svg{min-width:480px;display:block}
+/* SVG node helper classes embedded in inline styles */
+
+/* ─── STEP LIST ─── */
+.step-list{list-style:none;counter-reset:s;margin:16px 0}
+.step-list li{counter-increment:s;display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--rule);font-size:13.5px;color:var(--ink2);line-height:1.65;align-items:flex-start}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);font-family:'DM Mono',monospace;font-size:10px;background:var(--ink3);color:var(--bg);min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+
+/* ─── COMPARISON TABLE ─── */
+.cmp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:12.5px}
+.cmp-table th{text-align:left;padding:9px 14px;border-bottom:2px solid var(--rule);font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cmp-table td{padding:10px 14px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:top;line-height:1.6}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table td:first-child{font-weight:600;color:var(--ink);font-family:'DM Mono',monospace;font-size:11.5px}
+.cmp-table td.best{color:var(--jade);font-weight:500}
+.cmp-table td.ok{color:var(--ink2)}
+.cmp-table td.slow{color:var(--rose)}
+
+/* ─── PARAM TABLE ─── */
+.param-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+.param-table th{text-align:left;padding:8px 12px;border-bottom:2px solid var(--rule);font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.param-table td{padding:9px 12px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:top}
+.param-table tr:last-child td{border-bottom:none}
+.param-table td:first-child{font-family:'DM Mono',monospace;color:var(--teal);font-size:11.5px}
+.param-table td:nth-child(2){color:var(--amber);font-weight:500}
+
+/* ─── EXERCISE CARD ─── */
+.exercise{background:var(--bg);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-bottom:4px}
+.ex-head{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;transition:background var(--ease)}
+.ex-head:hover{background:var(--bg2)}
+.ex-lv{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:3px;flex-shrink:0}
+.lv1{background:#E8F8E8;color:#1A5A1A}.lv2{background:#E8EEFF;color:#1A2A8A}.lv3{background:#FFF0E0;color:#8A4A00}.lv4{background:#F0E8FF;color:#4A1A8A}.lv5{background:#FFE8E8;color:#8A1A1A}
+.ex-ttl{font-size:14.5px;font-weight:600;color:var(--ink);flex:1}
+.ex-chev{color:var(--ink3);transition:transform var(--ease);font-size:18px;flex-shrink:0}
+.ex-chev.open{transform:rotate(180deg)}
+.ex-body{display:none;padding:0 20px 24px}
+.ex-body.open{display:block}
+.obj-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);margin:14px 0 20px;border-radius:4px;overflow:hidden}
+.obj-cell{background:var(--bg);padding:14px 16px}
+.obj-cell.hl{background:var(--teal-l)}
+.obj-label{font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.obj-cell.hl .obj-label{color:var(--teal)}
+.obj-text{font-size:12.5px;color:var(--ink);line-height:1.6}
+
+/* ─── RESOURCE CARDS ─── */
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:16px 0}
+.res-card{background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:18px;text-decoration:none;display:block;transition:background var(--ease),border-color var(--ease),transform var(--ease)}
+.res-card:hover{background:var(--teal-l);border-color:var(--teal);transform:translateY(-1px);text-decoration:none}
+.res-tag{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.res-card:hover .res-tag{color:var(--teal)}
+.res-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.res-desc{font-size:12px;color:var(--ink3);line-height:1.5}
+
+/* ─── UE5 METHOD CARDS ─── */
+.method-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
+.method-card{border-radius:6px;padding:20px;border:1px solid var(--rule)}
+.method-card.best{border-color:rgba(32,144,128,.4);background:var(--pop-l)}
+.method-card.good{border-color:rgba(10,104,88,.4);background:var(--teal-l)}
+.method-card.ok{background:var(--bg2)}
+.method-card.limited{background:var(--bg2);opacity:.85}
+.method-icon{font-size:24px;margin-bottom:10px}
+.method-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.method-lat{font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:8px}
+.method-desc{font-size:12px;color:var(--ink2);line-height:1.6}
+.method-tag{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:2px;margin-top:10px}
+.method-card.best .method-tag{background:rgba(32,144,128,.2);color:var(--pop)}
+.method-card.good .method-tag{background:rgba(10,104,88,.2);color:var(--teal)}
+.method-card.ok .method-tag,.method-card.limited .method-tag{background:var(--bg3);color:var(--ink3)}
+
+/* ─── CODE BLOCK ─── */
+.code-block{background:#0D1117;border-radius:6px;padding:18px 20px;margin:14px 0;overflow-x:auto;position:relative;border:1px solid rgba(255,255,255,.06)}
+.code-lang{position:absolute;top:10px;right:14px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);font-family:'DM Mono',monospace}
+.code-block code{font-family:'DM Mono',monospace;font-size:12px;color:#C9D1D9;display:block;white-space:pre;line-height:1.85;background:none;padding:0;border-radius:0}
+.c-kw{color:#79C0FF}.c-str{color:#A5D6FF}.c-num{color:#F8A261}.c-fn{color:#D2A8FF}.c-cmt{color:#586069}.c-op{color:#79C0FF}
+
+/* ─── NODE CHAIN ─── */
+.chain{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px;background:var(--bg2);border-radius:4px;margin:12px 0}
+.cn{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:3px;font-weight:500}
+.cn.top{background:var(--top-l);color:var(--top)}.cn.chop{background:var(--chop-l);color:var(--chop)}.cn.sop{background:var(--sop-l);color:var(--sop)}.cn.dat{background:var(--dat-l);color:var(--dat)}.cn.comp{background:var(--comp-l);color:var(--comp)}.cn.mat{background:var(--mat-l);color:var(--mat)}.cn.pop{background:var(--pop-l);color:var(--pop)}
+.arr{color:var(--ink3);font-size:13px}
+.chain-note{font-size:11px;color:var(--ink3);font-style:italic}
+
+/* ─── GRID UTILITIES ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:18px 0}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt48{margin-top:48px}
+
+/* ─── PROGRESS INDICATOR ─── */
+.page-nav{display:flex;justify-content:space-between;align-items:center;padding:28px 0 0;border-top:1px solid var(--rule);margin-top:48px}
+.pn-btn{font-size:12px;font-weight:500;color:var(--ink3);text-decoration:none;display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--rule);border-radius:4px;background:var(--bg);cursor:pointer;transition:var(--ease)}
+.pn-btn:hover{background:var(--amber-l);border-color:var(--amber);color:var(--amber)}
+.pn-btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pn-btn.primary:hover{background:var(--amber);border-color:var(--amber)}
+.page-pos{font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace}
+
+/* ─── MINDSHIFT TABLE ─── */
+.mindshift{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin:24px 0;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.ms-col{background:var(--bg)}
+.ms-col.ms-new{background:var(--teal-l)}
+.ms-head{padding:12px 16px;border-bottom:1px solid var(--rule);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.ms-col.ms-new .ms-head{color:var(--teal)}
+.ms-row{padding:11px 16px;border-bottom:1px solid var(--rule);font-size:13px;color:var(--ink2);line-height:1.5}
+.ms-row:last-child{border-bottom:none}
+.ms-col.ms-new .ms-row{color:var(--ink)}
+.ms-mid{background:var(--bg2);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:8px 12px;border-left:1px solid var(--rule);border-right:1px solid var(--rule)}
+.ms-mid span{color:var(--ink3);font-size:20px}
+
+/* ─── FOOTER ─── */
+footer{margin-left:var(--sidebar);background:var(--bg2);border-top:1px solid var(--rule);padding:32px 48px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.ft-logo{font-family:'Playfair Display',serif;font-style:italic;color:var(--amber);font-size:14px}
+.ft-links{display:flex;gap:16px;flex-wrap:wrap}
+.ft-links a{font-size:11px;color:var(--ink3);text-decoration:none}
+.ft-links a:hover{color:var(--amber)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  :root{--sidebar:0px}
+  #sidebar{transform:translateX(-260px);width:260px;transition:transform var(--ease)}
+  #sidebar.open{transform:translateX(0)}
+  .hamburger{display:flex}
+  #main{margin-left:0}
+  footer{margin-left:0}
+  .page{padding:32px 24px 64px}
+  .two-col,.three-col,.obj-row{grid-template-columns:1fr}
+  .method-grid{grid-template-columns:1fr 1fr}
+  .mindshift{grid-template-columns:1fr}
+  .ms-mid{display:none}
+}
+@media(max-width:580px){
+  .method-grid,.op-grid{grid-template-columns:1fr}
+  .page{padding:24px 16px 56px}
+  footer{padding:24px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <div class="tb-logo">TouchDesigner <span>Guía Profesional</span></div>
+  <div class="tb-spacer"></div>
+  <nav class="tb-links">
+    <a class="tb-link external" href="https://learn.derivative.ca" target="_blank">learn.derivative.ca</a>
+    <a class="tb-link external" href="https://docs.derivative.ca" target="_blank">Docs</a>
+    <a class="tb-link external" href="https://forum.derivative.ca" target="_blank">Foro</a>
+  </nav>
+  <div class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sb-section">
+    <span class="sb-label">Fundamentos</span>
+    <a class="sb-item active" onclick="nav('p0',this)"><span class="sb-num">00</span>Introducción<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('p1',this)"><span class="sb-num">01</span>Mentalidad procedural<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('p2',this)"><span class="sb-num">02</span>Familias de operadores<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('p3',this)"><span class="sb-num">03</span>Flujo de datos<div class="sb-dot"></div></a>
+  </div>
+  <div class="sb-section">
+    <span class="sb-label">Ejercicios progresivos</span>
+    <a class="sb-item" onclick="nav('e1',this)"><span class="sb-num">E1</span>TOPs · Output visual<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e2',this)"><span class="sb-num">E2</span>CHOPs · Señales<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e3',this)"><span class="sb-num">E3</span>SOPs · Geometría 3D<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e4',this)"><span class="sb-num">E4</span>POPs · GPU Geometry<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e5',this)"><span class="sb-num">E5</span>Audio reactivo<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e6',this)"><span class="sb-num">E6</span>Webcam + Tracking<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e7',this)"><span class="sb-num">E7</span>Partículas GPU<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('e8',this)"><span class="sb-num">E8</span>Instancing avanzado<div class="sb-dot"></div></a>
+  </div>
+  <div class="sb-section">
+    <span class="sb-label">Integración profesional</span>
+    <a class="sb-item" onclick="nav('ue1',this)"><span class="sb-num">U1</span>TD × UE5 overview<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ue2',this)"><span class="sb-num">U2</span>OSC · Datos en tiempo real<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ue3',this)"><span class="sb-num">U3</span>Spout · Texturas GPU<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ue4',this)"><span class="sb-num">U4</span>TouchEngine · Integración nativa<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ue5',this)"><span class="sb-num">U5</span>Niagara · Partículas UE5<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ue6',this)"><span class="sb-num">U6</span>Pipeline completo<div class="sb-dot"></div></a>
+  </div>
+  <div class="sb-section">
+    <span class="sb-label">Craft profesional</span>
+    <a class="sb-item" onclick="nav('bp',this)"><span class="sb-num">BP</span>Buenas prácticas<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('res',this)"><span class="sb-num">★</span>Recursos oficiales<div class="sb-dot"></div></a>
+  </div>
+  <div class="sb-section">
+    <span class="sb-label">Scripting y shaders</span>
+    <a class="sb-item" onclick="nav('py',this)"><span class="sb-num">PY</span>Python en DATs<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('gl',this)"><span class="sb-num">GL</span>GLSL Shaders<div class="sb-dot"></div></a>
+  </div>
+  <div class="sb-section">
+    <span class="sb-label">Proyecto y arquitectura</span>
+    <a class="sb-item" onclick="nav('arch',this)"><span class="sb-num">AR</span>Arquitectura de proyectos<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('perf',this)"><span class="sb-num">PF</span>Performance profiling<div class="sb-dot"></div></a>
+    <a class="sb-item" onclick="nav('ruta',this)"><span class="sb-num">→</span>Ruta de aprendizaje<div class="sb-dot"></div></a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+<!-- ═══════════════════════════════════════
+     PAGE 00 — INTRO
+═══════════════════════════════════════ -->
+<div class="page active" id="p0">
+  <span class="page-kicker">Guía profesional para artistas · 2024–2025</span>
+  <h1 class="page-title">TouchDesigner:<br>el entorno donde<br>el <em>arte respira</em> en tiempo real.</h1>
+  <p class="page-sub">Una guía estructurada, basada en el currículo oficial de Derivative (100/200 Series), para animadores y artistas visuales que quieren dominar sistemas interactivos en tiempo real e integración profesional con Unreal Engine 5.</p>
+
+  <div class="two-col">
+    <div>
+      <h3>Qué es TouchDesigner</h3>
+      <p>TouchDesigner es un entorno de desarrollo visual de Derivative para crear sistemas interactivos en tiempo real. No es After Effects ni Cinema 4D — es más cercano a un <strong>sistema nervioso digital</strong> que conecta hardware, sensores, datos y gráficos en una red de nodos que procesa continuamente a 60fps.</p>
+      <p>La distinción más importante: no produces <em>archivos</em> de animación, produces <em>sistemas que se comportan</em>. El output cambia con el mundo real en cada frame.</p>
+    </div>
+    <div>
+      <h3>Para quién es esta guía</h3>
+      <p>Animadores, motion designers y artistas visuales que vienen de After Effects, Cinema 4D, Maya o Blender y quieren explorar sistemas interactivos, instalaciones y virtual production con Unreal Engine.</p>
+      <p>No se asume experiencia en programación — solo curiosidad por construir sistemas que responden.</p>
+    </div>
+  </div>
+
+  <h2>Currículo oficial de referencia</h2>
+  <p>Esta guía sigue la estructura del currículo oficial de Derivative en <strong>learn.derivative.ca</strong>, expandida con recursos de la comunidad y workflows profesionales:</p>
+  <div class="three-col">
+    <div class="callout teal" style="margin:0">
+      <div class="c-label">100 Series — Fundamentals</div>
+      <p>Entorno de TD, familias de operadores, lógica básica de interactividad. 69 tópicos con video + ejemplo descargable.</p>
+    </div>
+    <div class="callout" style="margin:0">
+      <div class="c-label">200 Series — Intermediate</div>
+      <p>Técnicas inter-operador, mecánicas avanzadas, instancing y automatización del workflow. Para usuarios con base sólida.</p>
+    </div>
+    <div class="callout slate" style="margin:0">
+      <div class="c-label">OP Snippets — 700+ ejemplos</div>
+      <p>Biblioteca viva de ejemplos por operador, accesible desde Help → OP Snippets dentro de TD. Esencial para aprender cada nodo.</p>
+    </div>
+  </div>
+
+  <h2>Lo que encontrarás aquí</h2>
+  <div class="op-grid">
+    <div class="op-card">
+      <div class="op-badge top">TOPs</div>
+      <div class="op-name">Textura y visuals</div>
+      <div class="op-desc">Feedback loops, compositing, procesamiento de imagen, video en tiempo real.</div>
+    </div>
+    <div class="op-card">
+      <div class="op-badge chop">CHOPs</div>
+      <div class="op-name">Señales y control</div>
+      <div class="op-desc">Audio, LFOs, tracking, parámetros de control, datos de sensores.</div>
+    </div>
+    <div class="op-card">
+      <div class="op-badge sop">SOPs</div>
+      <div class="op-name">Geometría 3D</div>
+      <div class="op-desc">Meshes, deformaciones procedurales, point clouds, formas 3D.</div>
+    </div>
+    <div class="op-card">
+      <div class="op-badge pop">POPs</div>
+      <div class="op-name">GPU Geometry · NUEVO</div>
+      <div class="op-desc">Point Operators GPU-acelerados — partículas, DMX, laser, reemplazo moderno de SOPs.</div>
+    </div>
+    <div class="op-card">
+      <div class="op-badge comp">COMPs</div>
+      <div class="op-name">Componentes</div>
+      <div class="op-desc">Cámara, luz, contenedores, interfaces, plugins externos como MediaPipe.</div>
+    </div>
+    <div class="op-card">
+      <div class="op-badge mat">MATs + DATs</div>
+      <div class="op-name">Shaders + Scripts</div>
+      <div class="op-desc">Materiales PBR, GLSL, tablas de datos, Python scripting.</div>
+    </div>
+  </div>
+
+  <div class="callout jade mt24">
+    <div class="c-label">Nota editorial 2025</div>
+    <p><strong>POPs (Point Operators)</strong> son la familia más nueva de TD, lanzada en 2024–2025. Corren íntegramente en GPU y están destinados a reemplazar a los SOPs para geometría y partículas. Esta guía cubre ambas familias: SOPs para contexto histórico y POPs para workflows modernos.</p>
+  </div>
+
+  <div class="page-nav">
+    <span></span>
+    <span class="page-pos">00 / 16</span>
+    <button class="pn-btn primary" onclick="nav('p1',null)">Mentalidad procedural →</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE 01 — MENTALIDAD ═══ -->
+<div class="page" id="p1">
+  <span class="page-kicker">Fundamentos conceptuales</span>
+  <h1 class="page-title">Cambiar de<br><em>keyframes</em> a sistemas.</h1>
+  <p class="page-sub">El mayor obstáculo para animadores en TouchDesigner no es técnico — es conceptual. Hay que dejar de pensar en resultados controlados y empezar a diseñar reglas de comportamiento.</p>
+
+  <div class="mindshift">
+    <div class="ms-col">
+      <div class="ms-head">Animación tradicional</div>
+      <div class="ms-row">Pienso en el resultado final exacto</div>
+      <div class="ms-row">Coloco keyframes en la línea de tiempo</div>
+      <div class="ms-row">El archivo siempre produce el mismo output</div>
+      <div class="ms-row">El usuario consume el contenido</div>
+      <div class="ms-row">El tiempo controla la animación</div>
+      <div class="ms-row">Trabajo en capas y composiciones</div>
+      <div class="ms-row">Exporto y el proceso termina</div>
+    </div>
+    <div class="ms-mid"><span>→</span><span>→</span><span>→</span><span>→</span><span>→</span><span>→</span><span>→</span></div>
+    <div class="ms-col ms-new">
+      <div class="ms-head">Sistema procedural en tiempo real</div>
+      <div class="ms-row">Diseño reglas y parámetros de comportamiento</div>
+      <div class="ms-row">Conecto fuentes de datos a parámetros visuales</div>
+      <div class="ms-row">El sistema produce output diferente en cada frame</div>
+      <div class="ms-row">El usuario, el sonido o el mundo generan el output</div>
+      <div class="ms-row">Audio, movimiento, datos controlan el sistema</div>
+      <div class="ms-row">Trabajo en redes de nodos y módulos</div>
+      <div class="ms-row">El sistema corre continuamente — no hay "fin"</div>
+    </div>
+  </div>
+
+  <h2>Los tres pilares del pensamiento en TD</h2>
+  <div class="three-col">
+    <div class="callout teal" style="margin:0">
+      <div class="c-label">1. Input</div>
+      <p>¿Qué entra al sistema? Webcam, audio, MIDI, OSC, teclado, tiempo, red, sensores. Siempre empieza aquí.</p>
+    </div>
+    <div class="callout" style="margin:0">
+      <div class="c-label">2. Proceso</div>
+      <p>¿Cómo transformo ese input? Filtro, mapeo, suavizo, amplifico. Los datos crudos raramente son útiles directos.</p>
+    </div>
+    <div class="callout slate" style="margin:0">
+      <div class="c-label">3. Output</div>
+      <p>¿Qué controla ese dato procesado? Colores, posiciones, velocidades, spawning de partículas, parámetros de Unreal.</p>
+    </div>
+  </div>
+
+  <h2>La lógica en tiempo real</h2>
+  <p>TouchDesigner procesa todo el grafo de nodos continuamente — hay un <strong>bucle de cocina</strong> (cook loop) que recalcula cada nodo que ha cambiado en cada frame. A diferencia del render tradicional que calcula todos los frames y luego los ensambla, TD no distingue entre "editar" y "reproducir". Siempre estás viendo el resultado final.</p>
+
+  <div class="callout rose">
+    <div class="c-label">Error frecuente de animadores</div>
+    <p>Intentar usar TD como After Effects: buscando una línea de tiempo, poniendo keyframes, pensando en secuencias. TD no tiene timeline principal — el tiempo es solo una señal más que puedes conectar a lo que quieras. Si necesitas una animación fija y predictible, After Effects sigue siendo la herramienta correcta.</p>
+  </div>
+
+  <h2>Pensamiento modular: la arquitectura de redes</h2>
+  <p>Los profesionales de TD organizan sus proyectos en <strong>módulos</strong>: contenedores COMP independientes con entradas y salidas bien definidas. Esto permite:</p>
+  <ul class="step-list">
+    <li>Reemplazar un módulo (ej: cambiar webcam por Kinect) sin tocar el resto</li>
+    <li>Testear módulos por separado antes de integrarlos</li>
+    <li>Compartir módulos (.tox) entre proyectos diferentes</li>
+    <li>Colaborar con otros sin conflictos de arquitectura</li>
+  </ul>
+  <div class="chain">
+    <span class="cn comp">INPUT COMP</span><span class="arr">→</span>
+    <span class="cn comp">PROCESS COMP</span><span class="arr">→</span>
+    <span class="cn comp">PARTICLE COMP</span><span class="arr">→</span>
+    <span class="cn comp">OUTPUT COMP</span>
+    <span class="chain-note">— Arquitectura modular típica de proyecto profesional</span>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('p0',null)">← Introducción</button>
+    <span class="page-pos">01 / 16</span>
+    <button class="pn-btn primary" onclick="nav('p2',null)">Familias de operadores →</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE 02 — OPERADORES ═══ -->
+<div class="page" id="p2">
+  <span class="page-kicker">Arquitectura de TouchDesigner</span>
+  <h1 class="page-title">Siete familias,<br>siete <em>idiomas</em>.</h1>
+  <p class="page-sub">Cada familia de operadores habla un tipo de dato diferente. Reconocer el color de un nodo de inmediato es la habilidad fundamental del usuario de TD — determina qué puede conectarse con qué y cómo fluye la información.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-label">▸ MAPA DE FAMILIAS DE OPERADORES — COLORES REALES EN TOUCHDESIGNER</div>
+    <svg viewBox="0 0 840 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:500px">
+      <!-- TOP -->
+      <g>
+        <rect x="8" y="20" width="108" height="70" rx="5" fill="#0D2640"/>
+        <rect x="8" y="20" width="108" height="8" rx="5" fill="#4A90D9"/>
+        <rect x="8" y="25" width="108" height="3" fill="#4A90D9"/>
+        <text x="62" y="48" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="13" font-weight="600">TOP</text>
+        <text x="62" y="62" text-anchor="middle" fill="#5A88B8" font-family="DM Sans,sans-serif" font-size="8.5">Texture Operators</text>
+        <text x="62" y="80" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">Imágenes · Video · Efectos</text>
+        <rect x="8" y="110" width="108" height="28" rx="3" fill="#0A1A30"/>
+        <text x="62" y="127" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">Noise · Composite · Render</text>
+        <text x="62" y="140" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">Blur · Ramp · Movie</text>
+      </g>
+      <!-- CHOP -->
+      <g>
+        <rect x="132" y="20" width="108" height="70" rx="5" fill="#0D2618"/>
+        <rect x="132" y="20" width="108" height="8" rx="5" fill="#54C46E"/>
+        <rect x="132" y="25" width="108" height="3" fill="#54C46E"/>
+        <text x="186" y="48" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="13" font-weight="600">CHOP</text>
+        <text x="186" y="62" text-anchor="middle" fill="#5AB878" font-family="DM Sans,sans-serif" font-size="8.5">Channel Operators</text>
+        <text x="186" y="80" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Señales · Audio · Sensores</text>
+        <rect x="132" y="110" width="108" height="28" rx="3" fill="#0A1A10"/>
+        <text x="186" y="127" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">LFO · Audio · Analyze</text>
+        <text x="186" y="140" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">Math · Filter · OSC In</text>
+      </g>
+      <!-- SOP -->
+      <g>
+        <rect x="256" y="20" width="108" height="70" rx="5" fill="#301208"/>
+        <rect x="256" y="20" width="108" height="8" rx="5" fill="#C46A3A"/>
+        <rect x="256" y="25" width="108" height="3" fill="#C46A3A"/>
+        <text x="310" y="48" text-anchor="middle" fill="#F8B888" font-family="DM Mono,monospace" font-size="13" font-weight="600">SOP</text>
+        <text x="310" y="62" text-anchor="middle" fill="#C88858" font-family="DM Sans,sans-serif" font-size="8.5">Surface Operators</text>
+        <text x="310" y="80" text-anchor="middle" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8">Geometría 3D · Meshes</text>
+        <rect x="256" y="110" width="108" height="28" rx="3" fill="#1A0A04"/>
+        <text x="310" y="127" text-anchor="middle" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8.5">Sphere · Grid · Noise</text>
+        <text x="310" y="140" text-anchor="middle" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8.5">Merge · Transform · Facet</text>
+      </g>
+      <!-- DAT -->
+      <g>
+        <rect x="380" y="20" width="108" height="70" rx="5" fill="#281E04"/>
+        <rect x="380" y="20" width="108" height="8" rx="5" fill="#C4A830"/>
+        <rect x="380" y="25" width="108" height="3" fill="#C4A830"/>
+        <text x="434" y="48" text-anchor="middle" fill="#F8E888" font-family="DM Mono,monospace" font-size="13" font-weight="600">DAT</text>
+        <text x="434" y="62" text-anchor="middle" fill="#C8A848" font-family="DM Sans,sans-serif" font-size="8.5">Data Operators</text>
+        <text x="434" y="80" text-anchor="middle" fill="#A88828" font-family="DM Sans,sans-serif" font-size="8">Texto · Tablas · Python</text>
+        <rect x="380" y="110" width="108" height="28" rx="3" fill="#180E00"/>
+        <text x="434" y="127" text-anchor="middle" fill="#A88828" font-family="DM Sans,sans-serif" font-size="8.5">Table · Script · OSC</text>
+        <text x="434" y="140" text-anchor="middle" fill="#A88828" font-family="DM Sans,sans-serif" font-size="8.5">CHOP to · Info · DAT to</text>
+      </g>
+      <!-- COMP -->
+      <g>
+        <rect x="504" y="20" width="108" height="70" rx="5" fill="#1C0C36"/>
+        <rect x="504" y="20" width="108" height="8" rx="5" fill="#9B54C4"/>
+        <rect x="504" y="25" width="108" height="3" fill="#9B54C4"/>
+        <text x="558" y="48" text-anchor="middle" fill="#D8A8F8" font-family="DM Mono,monospace" font-size="13" font-weight="600">COMP</text>
+        <text x="558" y="62" text-anchor="middle" fill="#B878D8" font-family="DM Sans,sans-serif" font-size="8.5">Component Operators</text>
+        <text x="558" y="80" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Contenedores · Cámara · UI</text>
+        <rect x="504" y="110" width="108" height="28" rx="3" fill="#100820"/>
+        <text x="558" y="127" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8.5">Camera · Light · Geometry</text>
+        <text x="558" y="140" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8.5">Container · Base · Select</text>
+      </g>
+      <!-- MAT -->
+      <g>
+        <rect x="628" y="20" width="108" height="70" rx="5" fill="#300820"/>
+        <rect x="628" y="20" width="108" height="8" rx="5" fill="#C454A8"/>
+        <rect x="628" y="25" width="108" height="3" fill="#C454A8"/>
+        <text x="682" y="48" text-anchor="middle" fill="#F8A8E8" font-family="DM Mono,monospace" font-size="13" font-weight="600">MAT</text>
+        <text x="682" y="62" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">Material Operators</text>
+        <text x="682" y="80" text-anchor="middle" fill="#A858A8" font-family="DM Sans,sans-serif" font-size="8">Shaders · PBR · GLSL</text>
+        <rect x="628" y="110" width="108" height="28" rx="3" fill="#1A0412"/>
+        <text x="682" y="127" text-anchor="middle" fill="#A858A8" font-family="DM Sans,sans-serif" font-size="8.5">Phong · PBR · GLSL</text>
+        <text x="682" y="140" text-anchor="middle" fill="#A858A8" font-family="DM Sans,sans-serif" font-size="8.5">Constant · Wireframe</text>
+      </g>
+      <!-- POP - NEW -->
+      <g>
+        <rect x="750" y="20" width="84" height="70" rx="5" fill="#083830" stroke="#20B8A8" stroke-width="1.5"/>
+        <rect x="750" y="20" width="84" height="8" rx="5" fill="#20B8A8"/>
+        <rect x="750" y="25" width="84" height="3" fill="#20B8A8"/>
+        <text x="792" y="45" text-anchor="middle" fill="#88F8F0" font-family="DM Mono,monospace" font-size="12" font-weight="600">POP</text>
+        <text x="792" y="57" text-anchor="middle" fill="#50A898" font-family="DM Sans,sans-serif" font-size="7.5">Point Operators</text>
+        <text x="792" y="69" text-anchor="middle" fill="#50A898" font-family="DM Sans,sans-serif" font-size="7.5">GPU · Partículas</text>
+        <text x="792" y="80" text-anchor="middle" fill="#50A898" font-family="DM Sans,sans-serif" font-size="7">2024/25 NUEVO</text>
+        <rect x="750" y="110" width="84" height="28" rx="3" fill="#041E1A"/>
+        <text x="792" y="127" text-anchor="middle" fill="#50A898" font-family="DM Sans,sans-serif" font-size="7.5">Particle · Noise</text>
+        <text x="792" y="140" text-anchor="middle" fill="#50A898" font-family="DM Sans,sans-serif" font-size="7.5">Transform · Merge</text>
+      </g>
+      <!-- Wire color legend -->
+      <text x="8" y="165" fill="rgba(255,255,255,.35)" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="600">CABLES:</text>
+      <line x1="62" y1="162" x2="112" y2="162" stroke="#4A90D9" stroke-width="2"/><text x="120" y="165" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">Textura (TOP)</text>
+      <line x1="196" y1="162" x2="246" y2="162" stroke="#54C46E" stroke-width="2"/><text x="254" y="165" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">Señal (CHOP)</text>
+      <line x1="330" y1="162" x2="380" y2="162" stroke="#C46A3A" stroke-width="2"/><text x="388" y="165" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8.5">Geometría (SOP)</text>
+      <line x1="480" y1="162" x2="530" y2="162" stroke="#C4A830" stroke-width="2" stroke-dasharray="4,2"/><text x="538" y="165" fill="#A88828" font-family="DM Sans,sans-serif" font-size="8.5">Datos (DAT)</text>
+      <line x1="640" y1="162" x2="690" y2="162" stroke="#20B8A8" stroke-width="2"/><text x="698" y="165" fill="#50A898" font-family="DM Sans,sans-serif" font-size="8.5">Punto (POP)</text>
+      <!-- Conversion note -->
+      <text x="8" y="195" fill="rgba(255,255,255,.35)" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="600">CONVERSORES:</text>
+      <text x="8" y="210" fill="rgba(255,255,255,.25)" font-family="DM Mono,monospace" font-size="8">CHOP to TOP   DAT to CHOP   SOP to CHOP   POP to CHOP   CHOP to SOP</text>
+      <text x="8" y="225" fill="rgba(255,255,255,.2)" font-family="DM Sans,sans-serif" font-size="8">Tab → buscar "to" para encontrar el conversor correcto entre cualquier par de familias</text>
+    </svg>
+  </div>
+
+  <h2>¿Cuándo usar cada familia?</h2>
+  <table class="cmp-table">
+    <tr><th>Familia</th><th>Úsala para</th><th>No la uses para</th><th>Rendimiento</th></tr>
+    <tr><td>TOP</td><td>Cualquier cosa visual, video, efectos de imagen, máscaras</td><td>Datos numéricos puros o geometría 3D</td><td class="best">GPU · Muy rápido</td></tr>
+    <tr><td>CHOP</td><td>Control, audio, señales, tracking, datos numéricos en tiempo real</td><td>Imágenes o geometría</td><td class="best">CPU optimizado</td></tr>
+    <tr><td>SOP</td><td>Geometría 3D procedural, deformaciones, point clouds estáticos</td><td>Partículas masivas (usa POPs)</td><td class="ok">CPU · Moderado</td></tr>
+    <tr><td>POP</td><td>Partículas, point clouds dinámicos, geometría GPU, DMX, laser</td><td>Proyectos que requieren builds estables (en maduración)</td><td class="best">GPU · Muy rápido</td></tr>
+    <tr><td>DAT</td><td>Scripts Python, tablas de datos, configuraciones, callbacks</td><td>Procesamiento en tiempo real de video o señales</td><td class="ok">CPU · Liviano</td></tr>
+    <tr><td>COMP</td><td>Organizar el proyecto en módulos, cámara, luz, interfaces</td><td>Procesamiento de datos directamente</td><td class="ok">Variable</td></tr>
+    <tr><td>MAT</td><td>Apariencia de superficie 3D, shaders GLSL personalizados</td><td>Procesamiento de video 2D</td><td class="best">GPU · Muy rápido</td></tr>
+  </table>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('p1',null)">← Mentalidad</button>
+    <span class="page-pos">02 / 16</span>
+    <button class="pn-btn primary" onclick="nav('p3',null)">Flujo de datos →</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE 03 — FLUJO DE DATOS ═══ -->
+<div class="page" id="p3">
+  <span class="page-kicker">Conceptos esenciales</span>
+  <h1 class="page-title">Cómo <em>fluyen</em><br>los datos en TD.</h1>
+  <p class="page-sub">Entender el flujo de datos es entender cómo pensar en TouchDesigner. Todo sistema, por complejo que sea, sigue los mismos principios básicos de señal, tipo y dirección.</p>
+
+  <h2>El principio de flujo unidireccional</h2>
+  <p>Los datos en TD siempre fluyen de <strong>izquierda a derecha</strong>. El output de un nodo se convierte en el input del siguiente. Los nodos de la izquierda son fuentes; los de la derecha son destinos. Esta convención visual es universal en TD.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-label">▸ FLUJO BÁSICO DE DATOS — PRINCIPIO FUNDAMENTAL</div>
+    <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:440px">
+      <defs>
+        <marker id="fw" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#54C46E"/></marker>
+        <marker id="fb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#4A90D9"/></marker>
+      </defs>
+      <!-- Source CHOP -->
+      <rect x="10" y="40" width="110" height="44" rx="4" fill="#0D2618"/>
+      <rect x="10" y="40" width="110" height="7" rx="4" fill="#54C46E"/>
+      <rect x="10" y="44" width="110" height="2" fill="#54C46E"/>
+      <text x="65" y="60" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">Audio Device In</text>
+      <text x="65" y="73" text-anchor="middle" fill="#5AB878" font-family="DM Sans,sans-serif" font-size="8">FUENTE / SOURCE</text>
+      <text x="65" y="98" text-anchor="middle" fill="rgba(90,184,120,.5)" font-family="DM Sans,sans-serif" font-size="7.5">genera datos</text>
+      <!-- Process CHOP -->
+      <line x1="120" y1="62" x2="175" y2="62" stroke="#54C46E" stroke-width="1.5" marker-end="url(#fw)"/>
+      <rect x="177" y="40" width="110" height="44" rx="4" fill="#0D2618"/>
+      <rect x="177" y="40" width="110" height="7" rx="4" fill="#54C46E"/>
+      <rect x="177" y="44" width="110" height="2" fill="#54C46E"/>
+      <text x="232" y="60" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">Analyze CHOP</text>
+      <text x="232" y="73" text-anchor="middle" fill="#5AB878" font-family="DM Sans,sans-serif" font-size="8">PROCESO</text>
+      <text x="232" y="98" text-anchor="middle" fill="rgba(90,184,120,.5)" font-family="DM Sans,sans-serif" font-size="7.5">transforma datos</text>
+      <!-- Math CHOP -->
+      <line x1="287" y1="62" x2="342" y2="62" stroke="#54C46E" stroke-width="1.5" marker-end="url(#fw)"/>
+      <rect x="344" y="40" width="110" height="44" rx="4" fill="#0D2618"/>
+      <rect x="344" y="40" width="110" height="7" rx="4" fill="#54C46E"/>
+      <rect x="344" y="44" width="110" height="2" fill="#54C46E"/>
+      <text x="399" y="60" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">Math CHOP</text>
+      <text x="399" y="73" text-anchor="middle" fill="#5AB878" font-family="DM Sans,sans-serif" font-size="8">MAPEO [0→1]</text>
+      <text x="399" y="98" text-anchor="middle" fill="rgba(90,184,120,.5)" font-family="DM Sans,sans-serif" font-size="7.5">remapea rango</text>
+      <!-- TOP output -->
+      <line x1="454" y1="62" x2="510" y2="62" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#fb)"/>
+      <text x="480" y="55" fill="rgba(90,184,120,.5)" font-family="DM Sans,sans-serif" font-size="7.5">referencia</text>
+      <rect x="512" y="40" width="110" height="44" rx="4" fill="#0D2640"/>
+      <rect x="512" y="40" width="110" height="7" rx="4" fill="#4A90D9"/>
+      <rect x="512" y="44" width="110" height="2" fill="#4A90D9"/>
+      <text x="567" y="60" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">HSV Adjust TOP</text>
+      <text x="567" y="73" text-anchor="middle" fill="#5A88B8" font-family="DM Sans,sans-serif" font-size="8">OUTPUT VISUAL</text>
+      <text x="567" y="98" text-anchor="middle" fill="rgba(90,136,184,.5)" font-family="DM Sans,sans-serif" font-size="7.5">hue=op('mathchop')[0]</text>
+      <!-- Direction label -->
+      <text x="10" y="18" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="8.5">DATOS FLUYEN →</text>
+      <line x1="120" y1="12" x2="620" y2="12" stroke="rgba(255,255,255,.1)" stroke-width="1" marker-end="url(#fw)"/>
+    </svg>
+  </div>
+
+  <h2>Referencias de CHOP en parámetros: el puente clave</h2>
+  <p>La forma más importante de conectar CHOPs a TOPs, SOPs o MATs es mediante <strong>expresiones Python</strong> en los campos de parámetros. Esta sintaxis funciona en cualquier campo numérico de cualquier operador:</p>
+  <div class="code-block">
+    <div class="code-lang">Python Expression (en campos de parámetros)</div>
+    <code><span class="c-cmt"># Sintaxis básica: op('nombre_del_chop')[canal]</span>
+<span class="c-cmt"># canal puede ser índice numérico o nombre de string</span>
+
+op(<span class="c-str">'audioRMS'</span>)[<span class="c-num">0</span>]          <span class="c-cmt"># primer canal por índice</span>
+op(<span class="c-str">'wristPos'</span>)[<span class="c-str">'pose:15:x'</span>]  <span class="c-cmt"># canal por nombre</span>
+op(<span class="c-str">'lfo1'</span>)[<span class="c-num">0</span>] * <span class="c-num">2</span> - <span class="c-num">1</span>       <span class="c-cmt"># operaciones matemáticas inline</span>
+<span class="c-fn">abs</span>(op(<span class="c-str">'motion'</span>)[<span class="c-num">0</span>])          <span class="c-cmt"># cualquier función Python</span>
+<span class="c-fn">tdu</span>.remap(op(<span class="c-str">'val'</span>)[<span class="c-num">0</span>], <span class="c-num">0</span>, <span class="c-num">1</span>, -<span class="c-num">1</span>, <span class="c-num">1</span>)  <span class="c-cmt"># remap con tdu helper</span></code>
+  </div>
+
+  <h2>El sistema de Cook en TD</h2>
+  <p>TD tiene un sistema de <strong>cooking</strong> (cocina) que determina cuándo se recalcula cada nodo. Un nodo "cocina" cuando:</p>
+  <ul class="step-list">
+    <li>Alguno de sus inputs cambió en este frame</li>
+    <li>Un parámetro propio cambió</li>
+    <li>Tiene Cook Type = <strong>Always</strong> (siempre recalcula, como los generadores)</li>
+    <li>Un script externo lo forzó a cocinar</li>
+  </ul>
+  <div class="callout">
+    <div class="c-label">Optimización por Cook</div>
+    <p>Si un nodo no recibe cambios, no cocina — ahorra procesamiento. Por eso <strong>Bypass</strong> (clic derecho → Bypass) es tu herramienta de debugging más útil: desactiva el cooking de un nodo para ver si es el cuello de botella. Un nodo con borde morado está cocinando más de un frame por ciclo — señal de problema de performance.</p>
+  </div>
+
+  <h2>Atajos esenciales del network</h2>
+  <table class="param-table">
+    <tr><th>Acción</th><th>Atajo</th><th>Notas</th></tr>
+    <tr><td>Crear nodo</td><td>Tab</td><td>Abre el buscador de operadores</td></tr>
+    <tr><td>Parámetros</td><td>P</td><td>Con un nodo seleccionado</td></tr>
+    <tr><td>Entrar COMP</td><td>U o doble clic</td><td>Ver interior del contenedor</td></tr>
+    <tr><td>Salir COMP</td><td>U o Escape</td><td>Subir un nivel</td></tr>
+    <tr><td>Perform Mode</td><td>F1</td><td>Output sin interfaz — medir performance real</td></tr>
+    <tr><td>Palette</td><td>Alt+L</td><td>Biblioteca de componentes prehechos</td></tr>
+    <tr><td>Centrar red</td><td>Home</td><td>Ver todos los nodos del network</td></tr>
+    <tr><td>OP Snippets</td><td>Help → OP Snippets</td><td>700+ ejemplos oficiales por operador</td></tr>
+    <tr><td>Performance</td><td>Alt+Shift+P</td><td>Ver tiempo de cocina de cada nodo</td></tr>
+    <tr><td>Consola</td><td>Alt+E</td><td>Ver errores y mensajes de Python</td></tr>
+  </table>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('p2',null)">← Operadores</button>
+    <span class="page-pos">03 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e1',null)">Ejercicio 1: TOPs →</button>
+  </div>
+</div>
+
+<!-- ═══ E1 — TOPs ═══ -->
+<div class="page" id="e1">
+  <span class="page-kicker">Ejercicio 1 · Texture Operators</span>
+  <h1 class="page-title">TOPs: tu primer<br><em>output visual</em>.</h1>
+  <p class="page-sub">Todo lo que se ve en TD es un TOP. Empezamos con el sistema más visual y accesible — un feedback loop que genera formas orgánicas desde cero.</p>
+
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv1">Principiante</span>
+      <span class="ex-ttl">1A · Feedback loop: formas que evolucionan infinitamente</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Formas orgánicas fluidas con trail persistente, que evolucionan sin fin.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Noise TOP, Feedback TOP, Composite TOP, Transform TOP — y la lógica del loop de textura.</div></div>
+      </div>
+      <div class="diagram-wrap">
+        <div class="diagram-label">▸ RED DE NODOS — EJERCICIO 1A: FEEDBACK LOOP</div>
+        <svg viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:460px">
+          <defs>
+            <marker id="at" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+          </defs>
+          <!-- Noise -->
+          <rect x="10" y="55" width="100" height="44" rx="4" fill="#0D2640"/>
+          <rect x="10" y="55" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="10" y="59" width="100" height="2" fill="#4A90D9"/>
+          <text x="60" y="75" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Noise TOP</text>
+          <text x="60" y="88" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">sparse / period=80</text>
+          <!-- Transform -->
+          <line x1="110" y1="77" x2="145" y2="77" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at)"/>
+          <rect x="147" y="55" width="100" height="44" rx="4" fill="#0D2640"/>
+          <rect x="147" y="55" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="147" y="59" width="100" height="2" fill="#4A90D9"/>
+          <text x="197" y="75" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Transform TOP</text>
+          <text x="197" y="88" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">scale=1.005 / rot=0.2°</text>
+          <!-- Composite -->
+          <line x1="247" y1="77" x2="283" y2="60" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at)"/>
+          <rect x="285" y="28" width="120" height="56" rx="4" fill="#0D2640"/>
+          <rect x="285" y="28" width="120" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="285" y="32" width="120" height="2" fill="#4A90D9"/>
+          <text x="345" y="50" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Composite TOP</text>
+          <text x="345" y="63" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">op=Add / alpha=0.92</text>
+          <text x="345" y="76" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">in1=Noise in2=Feedback</text>
+          <!-- Feedback -->
+          <rect x="430" y="55" width="100" height="44" rx="4" fill="#0D2640"/>
+          <rect x="430" y="55" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="430" y="59" width="100" height="2" fill="#4A90D9"/>
+          <text x="480" y="75" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Feedback TOP</text>
+          <text x="480" y="88" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">target=composite1</text>
+          <!-- Level -->
+          <line x1="405" y1="55" x2="440" y2="77" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at)"/>
+          <line x1="530" y1="77" x2="565" y2="77" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at)"/>
+          <rect x="567" y="55" width="100" height="44" rx="4" fill="#0D2640"/>
+          <rect x="567" y="55" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="567" y="59" width="100" height="2" fill="#4A90D9"/>
+          <text x="617" y="75" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Level TOP</text>
+          <text x="617" y="88" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">contrast / gamma</text>
+          <!-- Feedback loop arrow -->
+          <path d="M480,99 Q480,140 345,140 Q285,140 285,84" stroke="#4A90D9" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#at)"/>
+          <text x="383" y="155" fill="rgba(74,144,217,.5)" font-family="DM Sans,sans-serif" font-size="8">loop de feedback</text>
+          <!-- Noise → Composite (direct) -->
+          <path d="M60,55 Q60,15 285,38" stroke="#4A90D9" stroke-width="1" fill="none" stroke-dasharray="3,2" marker-end="url(#at)"/>
+          <text x="160" y="12" fill="rgba(74,144,217,.4)" font-family="DM Sans,sans-serif" font-size="8">noise → composite (input 1)</text>
+        </svg>
+      </div>
+      <ul class="step-list">
+        <li>Presiona <strong>Tab</strong> → crea <code>Noise TOP</code>. Type = Sparse, Period = 80. En Transform → Translate Z escribe <code>absTime.seconds * 0.2</code> para animar el ruido.</li>
+        <li>Conecta a un <code>Transform TOP</code>: Scale X/Y = <strong>1.005</strong>, Rotate = <strong>0.2</strong>. Este leve zoom + rotate es lo que crea el efecto de espiral al hacer loop.</li>
+        <li>Crea un <code>Composite TOP</code> (nómbralo <code>composite1</code>). Input 1 = Noise TOP. Operation = <strong>Add</strong>, Alpha = <strong>0.92</strong>.</li>
+        <li>Crea <code>Feedback TOP</code> conectado al Transform. En su parámetro <strong>Target OP</strong> escribe <code>composite1</code>. Conecta su output al Input 2 del Composite.</li>
+        <li>Agrega <code>Level TOP</code> al output del Composite. Ajusta Brightness/Contrast. Finaliza con <code>Out TOP</code> y presiona <strong>F1</strong>.</li>
+      </ul>
+      <table class="param-table">
+        <tr><th>Parámetro</th><th>Rango</th><th>Efecto visual</th></tr>
+        <tr><td>Composite / Alpha</td><td>0.88 – 0.97</td><td>Longitud del trail: más alto = cola más larga y persistente</td></tr>
+        <tr><td>Transform / Scale</td><td>1.001 – 1.01</td><td>Velocidad de expansión: &gt;1.01 se vuelve inestable</td></tr>
+        <tr><td>Noise / Period</td><td>30 – 300</td><td>Tamaño de las formas: más alto = formas más grandes</td></tr>
+        <tr><td>Transform / Rotate</td><td>0.1 – 2.0°</td><td>Velocidad de rotación del loop</td></tr>
+      </table>
+      <div class="callout">
+        <div class="c-label">Exploración</div>
+        <p>Prueba cambiar la Operation del Composite de <strong>Add</strong> a <strong>Over</strong>, <strong>Multiply</strong> o <strong>Screen</strong> — cada modo da un carácter radicalmente diferente. Añade un <code>Blur TOP</code> entre Transform y Feedback para suavizar el loop y crear un efecto de "glitch" o niebla.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise mt8">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv2">Básico</span>
+      <span class="ex-ttl">1B · Compositing con máscaras dinámicas</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Dos capas visuales mezcladas con una máscara circular animada que revela u oculta partes de cada capa.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Composite TOP en profundidad, Circle TOP como máscara, blend modes (Over, Multiply, Screen), Blur TOP para bordes suaves.</div></div>
+      </div>
+      <div class="chain">
+        <span class="cn top">Noise TOP (fondo)</span><span class="arr">→</span>
+        <span class="cn top">Composite TOP</span><span class="arr">←</span>
+        <span class="cn top">Ramp TOP (frente)</span>
+        <span class="arr"> · máscara:</span>
+        <span class="cn top">Circle TOP</span><span class="arr">→</span>
+        <span class="cn top">Blur TOP</span><span class="arr">→</span>
+        <span class="chain-note">alpha channel del Composite</span>
+      </div>
+      <ul class="step-list">
+        <li>Crea <code>Noise TOP</code> (Layer A, fondo) y <code>Ramp TOP</code> (Layer B, frente) con un gradiente de color.</li>
+        <li>Crea <code>Circle TOP</code>: Color = blanco, Background = negro. Radio = 0.3. En Center X escribe <code>sin(absTime.seconds * 0.5) * 0.3</code> para animarlo.</li>
+        <li>Conecta el Circle a <code>Blur TOP</code>: Size = 20. Esto suaviza el borde de la máscara para transiciones orgánicas.</li>
+        <li>Crea <code>Composite TOP</code>. Input 1 = Noise, Input 2 = Ramp, Input 3 = Blur (máscara). Operation = <strong>Over</strong>. Activa <strong>Mask Composite Input</strong> → Luminance.</li>
+        <li>Experimenta con las blend modes — cambia Over por Multiply o Screen y observa cómo cambia la interacción entre capas.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout teal mt24">
+    <div class="c-label">Recurso oficial — OP Snippets: TOPs</div>
+    <p>En TouchDesigner: Help → OP Snippets → TOP Family. Hay ejemplos interactivos de cada TOP. Los más importantes para empezar: <strong>Noise TOP</strong>, <strong>Feedback TOP</strong>, <strong>Composite TOP</strong>, <strong>Level TOP</strong>, <strong>Ramp TOP</strong>. Cada snippet incluye una red de nodos funcionando que puedes modificar en tiempo real.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('p3',null)">← Flujo de datos</button>
+    <span class="page-pos">04 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e2',null)">Ejercicio 2: CHOPs →</button>
+  </div>
+</div>
+
+<!-- ═══ E2 — CHOPs ═══ -->
+<div class="page" id="e2">
+  <span class="page-kicker">Ejercicio 2 · Channel Operators</span>
+  <h1 class="page-title">CHOPs: el sistema<br><em>nervioso</em> del proyecto.</h1>
+  <p class="page-sub">Los CHOPs generan, transforman y distribuyen señales numéricas. Son el puente entre el mundo real (audio, movimiento, datos) y los parámetros visuales. Sin CHOPs, un sistema en TD no puede ser interactivo.</p>
+
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv2">Básico</span>
+      <span class="ex-ttl">2 · LFOs → parámetros visuales: animación sin keyframes</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Múltiples parámetros animándose automáticamente — colores, tamaños, posiciones — sin un solo keyframe, controlados por osciladores.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">LFO CHOP, Math CHOP (remap), Select CHOP, referencia de CHOP en parámetros TOP con expresión Python, naming de nodos.</div></div>
+      </div>
+      <div class="diagram-wrap">
+        <div class="diagram-label">▸ RED DE NODOS — EJERCICIO 2: CHOP → TOP CONTROL</div>
+        <svg viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:480px">
+          <defs>
+            <marker id="ag2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#54C46E"/></marker>
+            <marker id="at2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+          </defs>
+          <!-- LFO 1 (color) -->
+          <rect x="10" y="20" width="108" height="48" rx="4" fill="#0D2618"/>
+          <rect x="10" y="20" width="108" height="7" rx="4" fill="#54C46E"/>
+          <rect x="10" y="24" width="108" height="2" fill="#54C46E"/>
+          <text x="64" y="40" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">LFO CHOP</text>
+          <text x="64" y="53" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">wave=sin / rate=0.3Hz</text>
+          <!-- Math 1 -->
+          <line x1="118" y1="44" x2="150" y2="44" stroke="#54C46E" stroke-width="1.5" marker-end="url(#ag2)"/>
+          <rect x="152" y="20" width="120" height="48" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <rect x="152" y="20" width="120" height="7" rx="4" fill="#54C46E"/>
+          <rect x="152" y="24" width="120" height="2" fill="#54C46E"/>
+          <text x="212" y="40" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">colorControl</text>
+          <text x="212" y="53" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Math: [-1,1]→[0,1]</text>
+          <!-- LFO 2 (size) -->
+          <rect x="10" y="110" width="108" height="48" rx="4" fill="#0D2618"/>
+          <rect x="10" y="110" width="108" height="7" rx="4" fill="#54C46E"/>
+          <rect x="10" y="114" width="108" height="2" fill="#54C46E"/>
+          <text x="64" y="130" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">LFO CHOP</text>
+          <text x="64" y="143" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">wave=tri / rate=0.1Hz</text>
+          <!-- Math 2 -->
+          <line x1="118" y1="134" x2="150" y2="134" stroke="#54C46E" stroke-width="1.5" marker-end="url(#ag2)"/>
+          <rect x="152" y="110" width="120" height="48" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <rect x="152" y="110" width="120" height="7" rx="4" fill="#54C46E"/>
+          <rect x="152" y="114" width="120" height="2" fill="#54C46E"/>
+          <text x="212" y="130" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">sizeControl</text>
+          <text x="212" y="143" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Math: [-1,1]→[0.05,0.5]</text>
+          <!-- TOPs -->
+          <rect x="336" y="10" width="200" height="56" rx="4" fill="#0D2640"/>
+          <rect x="336" y="10" width="200" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="336" y="14" width="200" height="2" fill="#4A90D9"/>
+          <text x="436" y="32" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">HSV Adjust TOP</text>
+          <text x="436" y="46" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">hue=op('colorControl')[0]</text>
+          <text x="436" y="58" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">sat=op('colorControl')[0]*2</text>
+          <rect x="336" y="104" width="200" height="56" rx="4" fill="#0D2640"/>
+          <rect x="336" y="104" width="200" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="336" y="108" width="200" height="2" fill="#4A90D9"/>
+          <text x="436" y="126" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Circle TOP</text>
+          <text x="436" y="140" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">radius=op('sizeControl')[0]</text>
+          <text x="436" y="152" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">centerX=op('colorControl')[0]-0.5</text>
+          <!-- Dashed ref lines -->
+          <line x1="272" y1="44" x2="336" y2="38" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#at2)"/>
+          <line x1="272" y1="134" x2="336" y2="132" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#at2)"/>
+          <line x1="272" y1="44" x2="336" y2="130" stroke="#54C46E" stroke-width="1" stroke-dasharray="3,3" opacity=".4" marker-end="url(#at2)"/>
+          <text x="288" y="28" fill="rgba(84,196,110,.5)" font-family="DM Sans,sans-serif" font-size="7.5">referencia Python</text>
+          <!-- Composite output -->
+          <rect x="575" y="55" width="100" height="56" rx="4" fill="#0D2640"/>
+          <rect x="575" y="55" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="575" y="59" width="100" height="2" fill="#4A90D9"/>
+          <text x="625" y="78" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Composite TOP</text>
+          <text x="625" y="91" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">+ Out TOP</text>
+          <line x1="536" y1="38" x2="575" y2="75" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at2)"/>
+          <line x1="536" y1="132" x2="575" y2="90" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#at2)"/>
+          <!-- Label: "Named CHOPs" -->
+          <text x="152" y="175" fill="rgba(84,196,110,.5)" font-family="DM Sans,sans-serif" font-size="8">CHOPs nombrados — referenciables desde cualquier parámetro</text>
+          <!-- wave type indicators -->
+          <path d="M22,172 Q32,165 42,172 Q52,180 62,172 Q72,165 82,172" stroke="#54C46E" stroke-width="1" fill="none" opacity=".4"/>
+          <path d="M22,192 L42,183 L62,192 L82,183 L102,192" stroke="#54C46E" stroke-width="1" fill="none" opacity=".4"/>
+          <text x="22" y="168" fill="rgba(84,196,110,.35)" font-family="DM Sans,sans-serif" font-size="7">sine</text>
+          <text x="22" y="188" fill="rgba(84,196,110,.35)" font-family="DM Sans,sans-serif" font-size="7">triangle</text>
+        </svg>
+      </div>
+      <ul class="step-list">
+        <li>Crea <code>LFO CHOP</code>: Wave = <strong>Sine</strong>, Rate = <strong>0.3</strong> Hz. Conecta a <code>Math CHOP</code>: From Range = -1/1, To Range = 0/1. Nombra este Math CHOP <code>colorControl</code> (clic derecho → Rename).</li>
+        <li>Crea segundo <code>LFO CHOP</code>: Wave = <strong>Triangle</strong>, Rate = <strong>0.1</strong> Hz. Conecta a otro <code>Math CHOP</code>: To Range = 0.05/0.5. Nombra <code>sizeControl</code>.</li>
+        <li>Crea <code>Noise TOP</code> como base. Conéctalo a <code>HSV Adjust TOP</code>. En <strong>Hue Rotate</strong> del HSV escribe: <code>op('colorControl')[0]</code>. El color cambia automáticamente.</li>
+        <li>Crea <code>Circle TOP</code>. En <strong>Radius</strong>: <code>op('sizeControl')[0]</code>. En <strong>Center X</strong>: <code>op('colorControl')[0] - 0.5</code>. El círculo pulsa y se mueve.</li>
+        <li>Combina en <code>Composite TOP</code> (Over) → <code>Out TOP</code>. Observa cómo ambos elementos se animan sin ningún keyframe.</li>
+      </ul>
+      <div class="callout teal">
+        <div class="c-label">Concepto clave: la expresión op()</div>
+        <p>La sintaxis <code>op('nombre')[canal]</code> funciona en <strong>cualquier campo numérico</strong> de cualquier operador. Es la forma de "cablear" CHOPs a parámetros de otros operadores sin una conexión visual directa. <code>[0]</code> = primer canal, <code>['chan1']</code> = por nombre. Puedes usar cualquier expresión Python en el mismo campo: multiplicar, sumar, <code>abs()</code>, <code>sin()</code>, etc.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e1',null)">← TOPs</button>
+    <span class="page-pos">05 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e3',null)">Ejercicio 3: SOPs →</button>
+  </div>
+</div>
+
+<!-- ═══ E3 — SOPs ═══ -->
+<div class="page" id="e3">
+  <span class="page-kicker">Ejercicio 3 · Surface Operators</span>
+  <h1 class="page-title">SOPs: geometría 3D<br><em>procedural</em>.</h1>
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv2">Básico–Intermedio</span>
+      <span class="ex-ttl">3 · Esfera deformada con ruido + pipeline 3D completo</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Una esfera 3D con superficie que se deforma orgánicamente en tiempo real, con material e iluminación.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Sphere SOP → Noise SOP → Geometry COMP → Camera + Light COMP → Render TOP. El pipeline 3D completo de TD.</div></div>
+      </div>
+      <div class="diagram-wrap">
+        <div class="diagram-label">▸ PIPELINE 3D COMPLETO EN TOUCHDESIGNER</div>
+        <svg viewBox="0 0 820 185" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:500px">
+          <defs>
+            <marker id="aor3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#C46A3A"/></marker>
+            <marker id="apu3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#9B54C4"/></marker>
+            <marker id="api3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#C454A8"/></marker>
+            <marker id="ab3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+          </defs>
+          <!-- SOP chain -->
+          <text x="10" y="14" fill="rgba(196,106,58,.5)" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="600">GEOMETRÍA (SOP)</text>
+          <rect x="10" y="20" width="100" height="48" rx="4" fill="#301208"/>
+          <rect x="10" y="20" width="100" height="7" rx="4" fill="#C46A3A"/>
+          <rect x="10" y="24" width="100" height="2" fill="#C46A3A"/>
+          <text x="60" y="42" text-anchor="middle" fill="#F8B888" font-family="DM Mono,monospace" font-size="9.5">Sphere SOP</text>
+          <text x="60" y="56" text-anchor="middle" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8">rows=50 cols=50</text>
+          <line x1="110" y1="44" x2="140" y2="44" stroke="#C46A3A" stroke-width="1.5" marker-end="url(#aor3)"/>
+          <rect x="142" y="20" width="110" height="48" rx="4" fill="#301208"/>
+          <rect x="142" y="20" width="110" height="7" rx="4" fill="#C46A3A"/>
+          <rect x="142" y="24" width="110" height="2" fill="#C46A3A"/>
+          <text x="197" y="42" text-anchor="middle" fill="#F8B888" font-family="DM Mono,monospace" font-size="9.5">Noise SOP</text>
+          <text x="197" y="56" text-anchor="middle" fill="#A86838" font-family="DM Sans,sans-serif" font-size="8">amp=0.3 / t=absTime*0.5</text>
+          <!-- MAT -->
+          <text x="10" y="90" fill="rgba(196,84,168,.5)" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="600">MATERIAL (MAT)</text>
+          <rect x="10" y="96" width="110" height="48" rx="4" fill="#300820"/>
+          <rect x="10" y="96" width="110" height="7" rx="4" fill="#C454A8"/>
+          <rect x="10" y="100" width="110" height="2" fill="#C454A8"/>
+          <text x="65" y="118" text-anchor="middle" fill="#F8A8E8" font-family="DM Mono,monospace" font-size="9.5">PBR MAT</text>
+          <text x="65" y="132" text-anchor="middle" fill="#A858A8" font-family="DM Sans,sans-serif" font-size="8">metal=0.8 / rough=0.2</text>
+          <!-- Geometry COMP -->
+          <rect x="290" y="10" width="140" height="80" rx="4" fill="#1C0C36"/>
+          <rect x="290" y="10" width="140" height="8" rx="5" fill="#9B54C4"/>
+          <rect x="290" y="15" width="140" height="2" fill="#9B54C4"/>
+          <text x="360" y="36" text-anchor="middle" fill="#D8A8FF" font-family="DM Mono,monospace" font-size="9.5" font-weight="600">Geometry COMP</text>
+          <text x="360" y="50" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">contiene: Noise SOP</text>
+          <text x="360" y="64" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">material: PBR MAT</text>
+          <text x="360" y="78" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">(entra con U)</text>
+          <line x1="252" y1="44" x2="290" y2="44" stroke="#C46A3A" stroke-width="1.5" marker-end="url(#apu3)"/>
+          <line x1="120" y1="120" x2="290" y2="60" stroke="#C454A8" stroke-width="1.5" marker-end="url(#apu3)"/>
+          <!-- Camera + Light -->
+          <text x="10" y="162" fill="rgba(155,84,196,.5)" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="600">ENTORNO (COMPs)</text>
+          <rect x="10" y="166" width="110" height="14" rx="3" fill="#1C0C36"/>
+          <rect x="126" y="166" width="110" height="14" rx="3" fill="#1C0C36"/>
+          <text x="65" y="176" text-anchor="middle" fill="#9858B8" font-family="DM Mono,monospace" font-size="8.5">Camera COMP (tz=4)</text>
+          <text x="181" y="176" text-anchor="middle" fill="#9858B8" font-family="DM Mono,monospace" font-size="8.5">Light COMP (point)</text>
+          <!-- Render TOP -->
+          <rect x="480" y="20" width="140" height="78" rx="4" fill="#0D2640"/>
+          <rect x="480" y="20" width="140" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="480" y="24" width="140" height="2" fill="#4A90D9"/>
+          <text x="550" y="46" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Render TOP</text>
+          <text x="550" y="60" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">camera=camera1</text>
+          <text x="550" y="74" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">lights=light1</text>
+          <path d="M430,50 Q456,50 480,50" stroke="#9B54C4" stroke-width="1.5" fill="none" marker-end="url(#ab3)"/>
+          <path d="M65,166 Q65,150 480,72" stroke="#9B54C4" stroke-width="1" fill="none" stroke-dasharray="3,2" marker-end="url(#ab3)"/>
+          <path d="M181,166 Q181,150 480,80" stroke="#9B54C4" stroke-width="1" fill="none" stroke-dasharray="3,2" marker-end="url(#ab3)"/>
+          <!-- Out TOP -->
+          <rect x="658" y="30" width="100" height="48" rx="4" fill="#0D2640"/>
+          <rect x="658" y="30" width="100" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="658" y="34" width="100" height="2" fill="#4A90D9"/>
+          <text x="708" y="52" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Out TOP</text>
+          <line x1="620" y1="59" x2="658" y2="55" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#ab3)"/>
+        </svg>
+      </div>
+      <ul class="step-list">
+        <li><strong>Geometría base:</strong> Crea <code>Sphere SOP</code>: Rows = 50, Cols = 50 (necesitamos densidad para que la deformación sea suave).</li>
+        <li><strong>Deformación:</strong> Conecta a <code>Noise SOP</code>. Amplitude = <strong>0.3</strong>, Period = <strong>1.5</strong>. En el campo <strong>Offset Z</strong> (o Time): <code>absTime.seconds * 0.5</code>. La esfera se deforma.</li>
+        <li><strong>Contenedor 3D:</strong> Crea <code>Geometry COMP</code>. Entra dentro (U). Coloca el Noise SOP como output principal. Sal (Escape o U).</li>
+        <li><strong>Material:</strong> Crea <code>PBR MAT</code>. Metallic = 0.8, Roughness = 0.2. En el Geometry COMP, asigna el PBR MAT al parámetro <strong>Material</strong>.</li>
+        <li><strong>Entorno:</strong> Crea <code>Camera COMP</code>: Translate Z = 4. Crea <code>Light COMP</code>: Type = Point, Intensity = 1.5.</li>
+        <li><strong>Render:</strong> Crea <code>Render TOP</code>. Camera = <code>camera1</code>, Lights = <code>light1</code>. El Geometry aparece automáticamente. Añade <code>Out TOP</code>.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e2',null)">← CHOPs</button>
+    <span class="page-pos">06 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e4',null)">Ejercicio 4: POPs →</button>
+  </div>
+</div>
+
+<!-- ═══ E4 — POPs ═══ -->
+<div class="page" id="e4">
+  <span class="page-kicker">Ejercicio 4 · Point Operators · NUEVO 2024–2025</span>
+  <h1 class="page-title">POPs: la próxima<br>generación de <em>geometría GPU</em>.</h1>
+  <p class="page-sub">Los Point Operators son la familia más nueva de TD, introducida en 2024. Corren íntegramente en GPU como compute shaders paralelos — reemplazan y superan a los SOPs para partículas, point clouds y DMX.</p>
+
+  <div class="callout jade">
+    <div class="c-label">Estado actual (2025)</div>
+    <p>POPs alcanzaron estado de producción en el build oficial 2025. Están disponibles en TouchDesigner 2025.30000+. Si tienes una versión anterior, usa los ejercicios de SOPs y ParticlesGPU (Palette) como alternativa equivalente. Para proyectos nuevos en 2025, usa POPs — son el futuro de la geometría en TD.</p>
+  </div>
+
+  <h2>¿Qué son los POPs y por qué importan?</h2>
+  <div class="two-col">
+    <div>
+      <h3>Diferencias clave vs SOPs</h3>
+      <table class="cmp-table">
+        <tr><th>Característica</th><th>SOP (CPU)</th><th>POP (GPU)</th></tr>
+        <tr><td>Procesamiento</td><td class="slow">CPU</td><td class="best">GPU paralelo</td></tr>
+        <tr><td>Velocidad</td><td class="slow">Moderada</td><td class="best">Muy rápida</td></tr>
+        <tr><td>Partículas</td><td class="ok">Palette (externo)</td><td class="best">Nativo</td></tr>
+        <tr><td>Atributos custom</td><td class="ok">Limitado</td><td class="best">Completo</td></tr>
+        <tr><td>DMX / Laser</td><td class="slow">No</td><td class="best">Sí (nativo)</td></tr>
+        <tr><td>Madurez</td><td class="best">Estable</td><td class="ok">Nuevo (2025)</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Atributos de punto en POPs</h3>
+      <p>Cada punto en un POP lleva un conjunto de <strong>atributos</strong>: datos que describen ese punto. Los principales:</p>
+      <table class="param-table">
+        <tr><th>Atributo</th><th>Tipo</th><th>Descripción</th></tr>
+        <tr><td>P</td><td>vec3</td><td>Posición XYZ</td></tr>
+        <tr><td>Color</td><td>vec4</td><td>Color RGBA</td></tr>
+        <tr><td>N</td><td>vec3</td><td>Normal de superficie</td></tr>
+        <tr><td>v</td><td>vec3</td><td>Velocidad (partículas)</td></tr>
+        <tr><td>id</td><td>int</td><td>ID único por punto</td></tr>
+        <tr><td>life</td><td>float</td><td>Vida restante</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="exercise mt24">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv3">Intermedio</span>
+      <span class="ex-ttl">4 · Partículas con POPs: emisión y fuerzas GPU</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Sistema de partículas GPU con emisión, turbulencia y control de color — todo procesado en la tarjeta de video.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Emitter POP, Particle POP (o Particle Solver POP), Noise POP para fuerzas, Render TOP con POPs, atributos de punto.</div></div>
+      </div>
+      <div class="chain">
+        <span class="cn pop">Emitter POP</span><span class="arr">→</span>
+        <span class="cn pop">Particle POP</span><span class="arr">→</span>
+        <span class="cn pop">Noise POP (force)</span><span class="arr">→</span>
+        <span class="cn pop">Transform POP</span><span class="arr">→</span>
+        <span class="cn comp">Geometry COMP</span><span class="arr">→</span>
+        <span class="cn top">Render TOP</span>
+      </div>
+      <ul class="step-list">
+        <li>Abre OP Snippets (Help → OP Snippets) y busca "Particle POP" para ver el ejemplo oficial antes de construir el tuyo.</li>
+        <li>Crea <code>Emitter POP</code>: Rate = <strong>2000</strong> partículas/frame, Life = <strong>3</strong> segundos, Initial Velocity = aleatorio en rango pequeño.</li>
+        <li>Conecta a <code>Particle POP</code>. Este operador actualiza la posición de cada partícula frame a frame aplicando velocidad, gravedad y otras fuerzas.</li>
+        <li>Añade <code>Noise POP</code>: conecta al Particle POP como fuerza (Force input). Amplitude = 0.3. Esto crea turbulencia que hace las partículas moverse orgánicamente.</li>
+        <li>Conecta la cadena POP a un <code>Geometry COMP</code>. El Render TOP renderizará los puntos como sprites o líneas.</li>
+        <li>En el <code>Render TOP</code>, para ver las partículas como sprites: usa un <code>Point Sprite MAT</code> o <code>Phong MAT</code> en modo Sprite. Ajusta el tamaño de los sprites.</li>
+        <li>Conecta un <code>LFO CHOP</code> al Rate del Emitter POP para hacer la emisión pulsante. Conecta otro al Amplitude del Noise POP para turbulencia variable.</li>
+      </ul>
+      <div class="callout">
+        <div class="c-label">Si usas TD anterior a 2025: alternativa con Palette</div>
+        <p>Abre la Palette (Alt+L) → Particle → <strong>ParticlesGPU</strong>. Este componente es el equivalente funcional — corre en GPU via GLSL. Los parámetros son similares: Emit Rate, Life, Gravity, Force Field. Para proyectos de producción en TD 2024 o anterior, ParticlesGPU de la Palette es la opción estable.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e3',null)">← SOPs</button>
+    <span class="page-pos">07 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e5',null)">Ejercicio 5: Audio →</button>
+  </div>
+</div>
+
+<!-- ═══ E5 — AUDIO ═══ -->
+<div class="page" id="e5">
+  <span class="page-kicker">Ejercicio 5 · Audio reactivo</span>
+  <h1 class="page-title">Audio reactivo:<br>el sonido como <em>escultor</em>.</h1>
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv3">Intermedio</span>
+      <span class="ex-ttl">5 · Espectro de frecuencias → visualización 3D y color</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Barras de frecuencia 3D que se elevan con el audio, con bajos, medios y agudos controlando elementos diferentes del sistema.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Audio Device In CHOP, Spectrum CHOP, Analyze CHOP para separar rangos, CHOP to SOP, instancing reactivo al audio.</div></div>
+      </div>
+      <div class="chain">
+        <span class="cn chop">Audio Device In</span><span class="arr">→</span>
+        <span class="cn chop">Spectrum CHOP</span><span class="arr">→</span>
+        <span class="cn chop">Select CHOP</span><span class="arr">(lows/mids/highs)</span>
+        <span class="arr">→</span>
+        <span class="cn chop">Analyze CHOP</span><span class="arr">→</span>
+        <span class="chain-note">controla geometría, color y partículas</span>
+      </div>
+      <div class="diagram-wrap">
+        <div class="diagram-label">▸ RED DE NODOS — EJERCICIO 5: AUDIO REACTIVO COMPLETO</div>
+        <svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:520px">
+          <defs>
+            <marker id="ag5d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#54C46E"/></marker>
+            <marker id="ab5d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+          </defs>
+          <!-- Audio In -->
+          <rect x="10" y="80" width="115" height="52" rx="4" fill="#0D2618"/>
+          <rect x="10" y="80" width="115" height="7" rx="4" fill="#54C46E"/>
+          <rect x="10" y="84" width="115" height="2" fill="#54C46E"/>
+          <text x="67" y="102" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5" font-weight="500">Audio Device In</text>
+          <text x="67" y="116" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">mic / sistema</text>
+          <text x="67" y="126" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="7.5">2 canales estéreo</text>
+          <!-- Spectrum -->
+          <line x1="125" y1="106" x2="158" y2="106" stroke="#54C46E" stroke-width="1.5" marker-end="url(#ag5d)"/>
+          <rect x="160" y="80" width="115" height="52" rx="4" fill="#0D2618"/>
+          <rect x="160" y="80" width="115" height="7" rx="4" fill="#54C46E"/>
+          <rect x="160" y="84" width="115" height="2" fill="#54C46E"/>
+          <text x="217" y="102" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9.5">Spectrum CHOP</text>
+          <text x="217" y="116" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">FFT 512 bins</text>
+          <text x="217" y="126" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="7.5">20Hz → 20kHz</text>
+          <!-- Three branches -->
+          <path d="M275,90 Q320,40 350,32" stroke="#54C46E" stroke-width="1.5" fill="none" marker-end="url(#ag5d)"/>
+          <path d="M275,106 L350,106" stroke="#54C46E" stroke-width="1.5" fill="none" marker-end="url(#ag5d)"/>
+          <path d="M275,122 Q320,175 350,180" stroke="#54C46E" stroke-width="1.5" fill="none" marker-end="url(#ag5d)"/>
+          <!-- Lows Select -->
+          <rect x="352" y="18" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <text x="412" y="36" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">lows</text>
+          <text x="412" y="50" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Select ch[0..80] → Analyze RMS</text>
+          <!-- Mids Select -->
+          <rect x="352" y="84" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <text x="412" y="102" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">mids</text>
+          <text x="412" y="116" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Select ch[80..400] → Analyze</text>
+          <!-- Highs Select -->
+          <rect x="352" y="165" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <text x="412" y="183" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">highs</text>
+          <text x="412" y="197" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Select ch[400..] → Analyze</text>
+          <!-- CHOP to TOP (spectrum) -->
+          <line x1="275" y1="106" x2="352" y2="106" stroke="#54C46E" stroke-width="1" opacity=".4" stroke-dasharray="3,2"/>
+          <rect x="510" y="62" width="125" height="52" rx="4" fill="#0D2640"/>
+          <rect x="510" y="62" width="125" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="510" y="66" width="125" height="2" fill="#4A90D9"/>
+          <text x="572" y="84" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">CHOP to TOP</text>
+          <text x="572" y="98" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">barras de frecuencia</text>
+          <text x="572" y="108" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="7.5">→ visualización 2D</text>
+          <!-- Control arrows to visuals -->
+          <path d="M472,40 Q580,40 510,75" stroke="#54C46E" stroke-width="1" fill="none" stroke-dasharray="4,2" opacity=".6" marker-end="url(#ab5d)"/>
+          <path d="M472,187 Q580,190 510,105" stroke="#54C46E" stroke-width="1" fill="none" stroke-dasharray="4,2" opacity=".6" marker-end="url(#ab5d)"/>
+          <text x="492" y="32" fill="rgba(84,196,110,.5)" font-family="DM Sans,sans-serif" font-size="7.5">lows → escala</text>
+          <text x="492" y="200" fill="rgba(84,196,110,.5)" font-family="DM Sans,sans-serif" font-size="7.5">highs → color hue</text>
+          <!-- Out visual -->
+          <rect x="665" y="72" width="100" height="44" rx="4" fill="#0D2618"/>
+          <rect x="665" y="72" width="100" height="7" rx="4" fill="#54C46E" opacity=".7"/>
+          <rect x="665" y="76" width="100" height="2" fill="#54C46E" opacity=".7"/>
+          <text x="715" y="92" text-anchor="middle" fill="#A8F0B8" font-family="DM Mono,monospace" font-size="9.5">HSV Adjust</text>
+          <text x="715" y="106" text-anchor="middle" fill="#5ACC84" font-family="DM Sans,sans-serif" font-size="8">+ Out TOP</text>
+          <line x1="635" y1="88" x2="665" y2="94" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#ab5d)"/>
+        </svg>
+      </div>
+      <ul class="step-list">
+        <li>Crea <code>Audio Device In CHOP</code>. Selecciona tu micrófono o salida de audio del sistema en los parámetros.</li>
+        <li>Conecta a <code>Spectrum CHOP</code>. Esto convierte la señal temporal en frecuencias (FFT) — verás 512 canales, uno por banda de frecuencia.</li>
+        <li>Crea tres ramas con <code>Select CHOP</code>: <strong>lows</strong> (ch0..80), <strong>mids</strong> (ch80..400), <strong>highs</strong> (ch400..). Conecta cada uno a un <code>Analyze CHOP</code> con Function = <strong>RMS Power</strong>.</li>
+        <li>Nombra los tres Analyze como <code>lows</code>, <code>mids</code>, <code>highs</code>. Amplifica con <code>Math CHOP</code> (×5 para lows, ×3 para mids/highs).</li>
+        <li>En la geometría 3D del ejercicio anterior (esfera), conecta: <code>op('lows')[0]</code> al Amplitude del Noise SOP — el beat deforma la esfera. <code>op('highs')[0]</code> al Hue del material.</li>
+        <li>Conecta el Spectrum directamente a un <code>CHOP to TOP</code> para visualizar las barras de frecuencia. Rota 90° con Transform TOP. Añade al Composite final.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e4',null)">← POPs</button>
+    <span class="page-pos">08 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e6',null)">Ejercicio 6: Webcam →</button>
+  </div>
+</div>
+
+<!-- ═══ E6 — WEBCAM ═══ -->
+<div class="page" id="e6">
+  <span class="page-kicker">Ejercicio 6 · Webcam + MediaPipe Tracking</span>
+  <h1 class="page-title">El cuerpo como<br><em>instrumento</em> visual.</h1>
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv3">Intermedio</span>
+      <span class="ex-ttl">6 · Optical Flow + MediaPipe: movimiento que pinta</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Tu movimiento corporal genera trazos de color persistentes. La dirección del movimiento determina el color del trazo.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Video Device In TOP, Optical Flow TOP, MediaPipe.tox (plugin), DAT to CHOP, Lag CHOP, Feedback loop con movimiento como input.</div></div>
+      </div>
+      <div class="chain">
+        <span class="cn top">Video Device In</span><span class="arr">→</span>
+        <span class="cn top">Monochrome</span><span class="arr">→</span>
+        <span class="cn top">Optical Flow</span><span class="arr">→</span>
+        <span class="cn top">HSV Adjust</span><span class="arr">→</span>
+        <span class="cn top">Composite</span><span class="arr">↔ Feedback</span>
+      </div>
+      <div class="chain">
+        <span class="cn comp">MediaPipe.tox</span><span class="arr">→</span>
+        <span class="cn dat">DAT to CHOP</span><span class="arr">→</span>
+        <span class="cn chop">Select CHOP</span><span class="arr">→</span>
+        <span class="cn chop">Lag CHOP</span><span class="arr">→</span>
+        <span class="chain-note">posición de muñeca → Circle TOP overlay</span>
+      </div>
+      <ul class="step-list">
+        <li><strong>Requiere:</strong> Plugin MediaPipe para TD — descarga gratis en <a href="https://github.com/torinmb/mediapipe-touchdesigner" target="_blank">github.com/torinmb/mediapipe-touchdesigner</a></li>
+        <li><strong>Optical Flow:</strong> Webcam → <code>Monochrome TOP</code> → <code>Optical Flow TOP</code> (Scale=2, PreBlur=2) → <code>HSV Adjust TOP</code> (Sat=3, Brightness=2). El movimiento se coloriza.</li>
+        <li><strong>Feedback loop de trazos:</strong> Crea <code>Composite TOP</code> (Add, Alpha=0.93). Conecta HSV Adjust como input 1. Crea <code>Feedback TOP</code> (target=composite1) como input 2. Conecta el output del Composite al Feedback — el loop está listo.</li>
+        <li><strong>MediaPipe tracking:</strong> Arrastra <code>MediaPipe.tox</code> al network. Activa solo <strong>Hand Tracking</strong>. Conecta su output DAT a <code>DAT to CHOP</code> → <code>Select CHOP</code> (canales: h1:wrist:x / h1:wrist:y) → <code>Lag CHOP</code> (0.08). Nombra el resultado <code>wristPos</code>.</li>
+        <li><strong>Indicador visual:</strong> Crea <code>Circle TOP</code> (blanco, radio 0.04). Center X = <code>op('wristPos')['h1:wrist:x'] - 0.5</code>. Center Y = <code>0.5 - op('wristPos')['h1:wrist:y']</code>. Conecta como tercer input del Composite (Over).</li>
+        <li>Muévete frente a la cámara — el movimiento queda pintado en la pantalla. El Composite mezcla el trazo del frame actual con el trazo acumulado del Feedback.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e5',null)">← Audio</button>
+    <span class="page-pos">09 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e7',null)">Ejercicio 7: Partículas →</button>
+  </div>
+</div>
+
+<!-- ═══ E7 — PARTICLES ═══ -->
+<div class="page" id="e7">
+  <span class="page-kicker">Ejercicio 7 · Sistema de partículas completo</span>
+  <h1 class="page-title">500K partículas:<br><em>física</em> en GPU.</h1>
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv4">Intermedio+</span>
+      <span class="ex-ttl">7 · Partículas con tracking, audio y Optical Flow combinados</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">500K partículas que orbitan la posición de tus manos, turbuladas por el Optical Flow y con color reactivo al audio.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">ParticlesGPU Palette COMP, attractor desde CHOP, force field desde textura TOP, Bloom TOP, sistema integrado con múltiples inputs.</div></div>
+      </div>
+      <div class="callout teal">
+        <div class="c-label">Arquitectura del sistema</div>
+        <p>Este ejercicio combina todos los anteriores: <strong>MediaPipe</strong> (E6) como attractor · <strong>Optical Flow</strong> (E6) como force field · <strong>Audio</strong> (E5) como color de nacimiento · <strong>Render 3D</strong> (E3) como output final.</p>
+      </div>
+      <ul class="step-list">
+        <li><strong>Setup de partículas:</strong> Palette (Alt+L) → Particle → <strong>ParticlesGPU</strong>. Configura: Max Particles = <strong>200000</strong> (sube gradualmente según tu GPU), Emit Rate = <strong>2000</strong>/frame, Life = <strong>4</strong> seg, Gravity Y = <strong>0</strong>.</li>
+        <li><strong>Attractor desde tracking:</strong> Dentro del ParticlesGPU (U para entrar), encuentra el parámetro Attractor Position. X = <code>op('../wristPos')['h1:wrist:x'] * 2 - 1</code>. Y = <code>-(op('../wristPos')['h1:wrist:y'] * 2 - 1)</code>. Strength = 0.5.</li>
+        <li><strong>Force field:</strong> Conecta el Optical Flow TOP al input <strong>Force Field</strong> del ParticlesGPU. Force Scale = 0.4. Las partículas son arrastradas por el movimiento en cámara.</li>
+        <li><strong>Color reactivo al audio:</strong> En Birth Color del ParticlesGPU, referencia el CHOP de highs: en la expresión del color HSV, H = <code>op('../highs')[0]</code>.</li>
+        <li><strong>Render:</strong> Camera COMP (tz=5), Light COMP, Render TOP → <code>Bloom TOP</code> (Size=30, Threshold=0.4) → Out TOP. El Bloom da el resplandor característico.</li>
+        <li><strong>Escalar:</strong> Sube Max Particles mientras monitoreas el framerate. El límite es cuando bajes de 50fps en Perform Mode (F1).</li>
+      </ul>
+      <table class="param-table">
+        <tr><th>Parámetro</th><th>Valor inicial</th><th>Efecto</th></tr>
+        <tr><td>Max Particles</td><td>200000</td><td>Densidad visual — escalar según GPU</td></tr>
+        <tr><td>Attractor Strength</td><td>0.3 – 1.0</td><td>Cuán fuerte atraen las manos</td></tr>
+        <tr><td>Turbulence</td><td>0.1 – 0.5</td><td>Caos adicional en el movimiento</td></tr>
+        <tr><td>Life</td><td>2 – 8 seg</td><td>Cuánto duran antes de desaparecer</td></tr>
+        <tr><td>Bloom / Size</td><td>20 – 60</td><td>Radio del resplandor alrededor de partículas</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e6',null)">← Webcam</button>
+    <span class="page-pos">10 / 16</span>
+    <button class="pn-btn primary" onclick="nav('e8',null)">Ejercicio 8: Instancing →</button>
+  </div>
+</div>
+
+<!-- ═══ E8 — INSTANCING ═══ -->
+<div class="page" id="e8">
+  <span class="page-kicker">Ejercicio 8 · Instancing avanzado</span>
+  <h1 class="page-title">Miles de objetos:<br><em>instancing</em> procedural.</h1>
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv4">Intermedio+</span>
+      <span class="ex-ttl">8 · Grid de 1024 cubos reactivos al espectro de audio</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Una cuadrícula 3D de 1024 cubos que se elevan y cambian de color individualmente con cada banda del espectro de audio.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Geometry COMP con Instancing ON, CHOP como fuente de posición/escala/color de instancias. La técnica detrás de "miles de objetos" en instalaciones profesionales.</div></div>
+      </div>
+      <div class="callout teal">
+        <div class="c-label">Por qué instancing y no copias individuales</div>
+        <p>Con instancing, 1024 cubos se dibujan en la GPU como si fueran uno solo — cada instancia recibe sus transformaciones desde el CHOP pero el costo de render es el de un solo objeto. Sin instancing, 1024 Geometry COMPs individuales harían colapsar TD inmediatamente. Esta es la técnica detrás de todos los efectos de "campo de objetos" en instalaciones.</p>
+      </div>
+      <div class="diagram-wrap">
+        <div class="diagram-label">▸ RED DE NODOS — EJERCICIO 8: INSTANCING REACTIVO AL AUDIO</div>
+        <svg viewBox="0 0 820 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:520px">
+          <defs>
+            <marker id="ag8d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#54C46E"/></marker>
+            <marker id="ab8d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+            <marker id="apu8d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#9B54C4"/></marker>
+          </defs>
+          <!-- Audio chain -->
+          <text x="10" y="14" fill="rgba(84,196,110,.4)" font-family="DM Sans,sans-serif" font-size="8">AUDIO (CHOP)</text>
+          <rect x="10" y="20" width="108" height="44" rx="4" fill="#0D2618"/>
+          <rect x="10" y="20" width="108" height="6" rx="4" fill="#54C46E"/>
+          <rect x="10" y="24" width="108" height="2" fill="#54C46E"/>
+          <text x="64" y="40" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">Audio Device In</text>
+          <text x="64" y="52" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">→ Spectrum CHOP</text>
+          <line x1="118" y1="42" x2="148" y2="42" stroke="#54C46E" stroke-width="1.5" marker-end="url(#ag8d)"/>
+          <rect x="150" y="20" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+          <rect x="150" y="20" width="120" height="6" rx="4" fill="#54C46E"/>
+          <rect x="150" y="24" width="120" height="2" fill="#54C46E"/>
+          <text x="210" y="40" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">instHeight</text>
+          <text x="210" y="52" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Resample→1024 ch→Math [0,3]</text>
+          <!-- Grid positions CHOP -->
+          <text x="10" y="98" fill="rgba(84,196,110,.4)" font-family="DM Sans,sans-serif" font-size="8">POSICIONES (CHOP)</text>
+          <rect x="10" y="104" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1"/>
+          <rect x="10" y="104" width="120" height="6" rx="4" fill="#54C46E"/>
+          <rect x="10" y="108" width="120" height="2" fill="#54C46E"/>
+          <text x="70" y="124" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">instPos</text>
+          <text x="70" y="136" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">Pattern→Math grilla 32×32</text>
+          <!-- Color CHOP -->
+          <rect x="150" y="104" width="120" height="44" rx="4" fill="#0D2618" stroke="#54C46E" stroke-width="1"/>
+          <rect x="150" y="104" width="120" height="6" rx="4" fill="#54C46E"/>
+          <rect x="150" y="108" width="120" height="2" fill="#54C46E"/>
+          <text x="210" y="124" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="9">instColor</text>
+          <text x="210" y="136" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8">instHeight→RGB mapping</text>
+          <!-- Geometry COMP (large) -->
+          <rect x="310" y="10" width="200" height="150" rx="5" fill="#1C0C36" stroke="#9B54C4" stroke-width="1.5"/>
+          <rect x="310" y="10" width="200" height="8" rx="5" fill="#9B54C4"/>
+          <rect x="310" y="15" width="200" height="2" fill="#9B54C4"/>
+          <text x="410" y="36" text-anchor="middle" fill="#D8A8FF" font-family="DM Mono,monospace" font-size="10" font-weight="600">Geometry COMP</text>
+          <text x="410" y="52" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8.5">Instancing: ON</text>
+          <rect x="320" y="58" width="180" height="24" rx="3" fill="#100820"/>
+          <text x="410" y="73" text-anchor="middle" fill="#C878C8" font-family="DM Mono,monospace" font-size="8">Box SOP (base geometry)</text>
+          <text x="410" y="95" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Translate X/Z = instPos</text>
+          <text x="410" y="109" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Scale Y = instHeight</text>
+          <text x="410" y="123" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Instance Color = instColor</text>
+          <text x="410" y="140" text-anchor="middle" fill="rgba(155,84,196,.5)" font-family="DM Sans,sans-serif" font-size="7.5">1024 instancias = costo de 1 objeto</text>
+          <!-- Render TOP + Out -->
+          <rect x="550" y="36" width="140" height="72" rx="4" fill="#0D2640"/>
+          <rect x="550" y="36" width="140" height="7" rx="4" fill="#4A90D9"/>
+          <rect x="550" y="40" width="140" height="2" fill="#4A90D9"/>
+          <text x="620" y="60" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="9.5">Render TOP</text>
+          <text x="620" y="74" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">Camera: vista 45° perspectiva</text>
+          <text x="620" y="86" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8">Light: directional + ambient</text>
+          <rect x="710" y="52" width="90" height="40" rx="4" fill="#0D2618"/>
+          <rect x="710" y="52" width="90" height="6" rx="4" fill="#54C46E" opacity=".7"/>
+          <text x="755" y="74" text-anchor="middle" fill="#A8F0B8" font-family="DM Mono,monospace" font-size="9.5">Out TOP</text>
+          <!-- Wires -->
+          <line x1="270" y1="42" x2="310" y2="80" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#apu8d)"/>
+          <line x1="130" y1="126" x2="310" y2="100" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#apu8d)"/>
+          <line x1="270" y1="126" x2="310" y2="118" stroke="#54C46E" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#apu8d)"/>
+          <line x1="510" y1="85" x2="550" y2="72" stroke="#9B54C4" stroke-width="1.5" marker-end="url(#ab8d)"/>
+          <line x1="690" y1="72" x2="710" y2="72" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#ab8d)"/>
+          <text x="285" y="32" fill="rgba(84,196,110,.45)" font-family="DM Sans,sans-serif" font-size="7.5">ScaleY por instancia</text>
+          <text x="140" y="99" fill="rgba(84,196,110,.45)" font-family="DM Sans,sans-serif" font-size="7.5">posiciones XZ</text>
+        </svg>
+      </div>
+      <ul class="step-list">
+        <li><strong>Posiciones de grilla:</strong> Crea <code>Pattern CHOP</code>: Type = Ramp, Length = 1024. Conecta a <code>Math CHOP</code> para generar posiciones X/Z en grilla 32×32. Nombra <code>instPos</code>.</li>
+        <li><strong>Alturas desde audio:</strong> Toma el Spectrum CHOP del Ejercicio 5. <code>Resample CHOP</code> a 1024 canales. <code>Math CHOP</code>: rango [0,max] → [0.05, 3.0]. Nombra <code>instHeight</code>.</li>
+        <li><strong>Geometría base:</strong> Crea <code>Box SOP</code> (tamaño 0.08 × 1.0 × 0.08). Coloca dentro de <code>Geometry COMP</code>.</li>
+        <li><strong>Activar instancing:</strong> En el Geometry COMP → pestaña <strong>Instance</strong> → Instance = ON. Translate X: referencia a <code>instPos</code> canal X. Translate Z: canal Z. Scale Y: <code>instHeight</code>.</li>
+        <li><strong>Color por altura:</strong> Crea un CHOP que mapee <code>instHeight</code> a valores RGB. Conecta al Instance Color del Geometry COMP.</li>
+        <li>Renderiza con Camera COMP en ángulo 45° (para ver perspectiva de la grilla), Light COMP, Render TOP, Out TOP. La cuadrícula visualiza el espectro en 3D.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e7',null)">← Partículas</button>
+    <span class="page-pos">11 / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue1',null)">TD × Unreal Engine →</button>
+  </div>
+</div>
+
+<!-- ═══ UE1 — TD × UE5 OVERVIEW ═══ -->
+<div class="page" id="ue1">
+  <span class="page-kicker">Integración profesional · TouchDesigner × Unreal Engine 5</span>
+  <h1 class="page-title">TD como cerebro,<br>UE5 como <em>renderer</em>.</h1>
+  <p class="page-sub">TouchDesigner y Unreal Engine ocupan roles complementarios: TD es el hub de procesamiento interactivo; UE5 es el motor de render cinematográfico. Juntos son el estándar profesional para instalaciones, virtual production y performances interactivos.</p>
+
+  <h2>Los cuatro métodos de integración</h2>
+  <div class="method-grid">
+    <div class="method-card best">
+      <div class="method-icon">⚙️</div>
+      <div class="method-name">TouchEngine Plugin</div>
+      <div class="method-lat">&lt;1ms latencia</div>
+      <div class="method-desc">Corre archivos .tox de TD como subproceso nativo dentro de UE5. Comparte CHOP, DAT y TOP por memoria compartida. La integración más profunda disponible.</div>
+      <span class="method-tag">Requiere TD Commercial/Pro</span>
+    </div>
+    <div class="method-card best">
+      <div class="method-icon">🖼️</div>
+      <div class="method-name">Spout / Syphon</div>
+      <div class="method-lat">&lt;1ms latencia</div>
+      <div class="method-desc">Comparte texturas entre aplicaciones en el mismo equipo sin pasar por CPU. Spout en Windows, Syphon en Mac. Zero-copy GPU memory sharing.</div>
+      <span class="method-tag">Mismo equipo · Gratis</span>
+    </div>
+    <div class="method-card good">
+      <div class="method-icon">📡</div>
+      <div class="method-name">OSC Protocol</div>
+      <div class="method-lat">1–5ms latencia</div>
+      <div class="method-desc">Open Sound Control sobre UDP. Envía floats, strings, arrays. El método más usado para datos de control numérico entre aplicaciones. Funciona en red LAN.</div>
+      <span class="method-tag">Mismo equipo o red · Gratis</span>
+    </div>
+    <div class="method-card ok">
+      <div class="method-icon">📹</div>
+      <div class="method-name">NDI</div>
+      <div class="method-lat">10–60ms latencia</div>
+      <div class="method-desc">Network Device Interface. Video de alta calidad por red LAN. Más latencia que Spout pero funciona entre equipos diferentes en la misma red.</div>
+      <span class="method-tag">Red LAN · Requiere plugin</span>
+    </div>
+  </div>
+
+  <div class="callout slate">
+    <div class="c-label">Regla de selección de protocolo</div>
+    <p><strong>OSC</strong> para valores numéricos (posiciones, velocidades, estados, parámetros de Niagara). <strong>Spout</strong> para texturas entre aplicaciones en el mismo equipo (posiciones codificadas como textura, video, render). <strong>NDI</strong> cuando los equipos están en red separada. <strong>TouchEngine</strong> cuando necesitas la integración más profunda y cuentas con licencia comercial.</p>
+  </div>
+
+  <h2>Tabla de comparación completa</h2>
+  <table class="cmp-table">
+    <tr><th>Método</th><th>Latencia</th><th>Tipo de dato</th><th>Red capable</th><th>Costo</th><th>Mejor para</th></tr>
+    <tr><td>TouchEngine</td><td class="best">&lt;1ms</td><td>CHOP, DAT, TOP</td><td>No (local)</td><td class="slow">TD Commercial req.</td><td>Integración profunda en producción</td></tr>
+    <tr><td>Spout</td><td class="best">&lt;1ms</td><td>Texturas GPU</td><td>No (local)</td><td class="best">Gratis</td><td>Textures, posición como textura, video</td></tr>
+    <tr><td>OSC/UDP</td><td class="best">1–5ms</td><td>Floats, strings, arrays</td><td>Sí</td><td class="best">Gratis</td><td>Control data, parámetros, triggers</td></tr>
+    <tr><td>NDI</td><td class="ok">10–60ms</td><td>Video + audio</td><td>Sí</td><td class="ok">Plugin</td><td>Video entre equipos en red</td></tr>
+    <tr><td>DMX/ArtNet</td><td class="ok">5–15ms</td><td>Channel values</td><td>Sí</td><td class="best">Gratis</td><td>Iluminación, LEDs, fixtures</td></tr>
+  </table>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('e8',null)">← Instancing</button>
+    <span class="page-pos">12 / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue2',null)">OSC en detalle →</button>
+  </div>
+</div>
+
+<!-- ═══ UE2 — OSC ═══ -->
+<div class="page" id="ue2">
+  <span class="page-kicker">Integración · OSC · Open Sound Control</span>
+  <h1 class="page-title">OSC: datos<br><em>numéricos</em> en tiempo real.</h1>
+  <p class="page-sub">OSC es el protocolo más usado para enviar valores de control entre TouchDesigner y Unreal Engine. Es simple, gratuito, y funciona en tiempo real sobre UDP.</p>
+
+  <div class="two-col">
+    <div>
+      <h3>En TouchDesigner: OSC Out CHOP</h3>
+      <table class="param-table">
+        <tr><th>Parámetro</th><th>Valor</th><th>Notas</th></tr>
+        <tr><td>Network Address</td><td>127.0.0.1</td><td>Mismo equipo · o IP del otro equipo en LAN</td></tr>
+        <tr><td>Network Port</td><td>7000</td><td>Cualquier puerto libre &gt; 1024</td></tr>
+        <tr><td>Message</td><td>auto desde canales</td><td>Canal "wristX" → /wristX</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>En Unreal Engine 5: OSC Plugin</h3>
+      <ol class="step-list">
+        <li>Edit → Plugins → buscar "OSC" → activar → reiniciar</li>
+        <li>Level Blueprint → Create OSC Server (puerto 7000)</li>
+        <li>Bind evento On OSC Message Received</li>
+        <li>Parse address → Set Niagara Variable Float</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">TouchDesigner — OSC Out CHOP</div>
+    <code><span class="c-cmt"># Mensajes OSC generados automáticamente desde los canales del CHOP:</span>
+<span class="c-cmt"># Canal "wristX" → dirección OSC "/wristX"</span>
+<span class="c-cmt"># Canal "audioRMS" → dirección OSC "/audioRMS"</span>
+
+<span class="c-cmt"># También puedes configurar mensajes manuales:</span>
+<span class="c-cmt"># /particles/wrist/left  {x} {y} {z}</span>
+<span class="c-cmt"># /particles/spawnRate   {val}</span>
+<span class="c-cmt"># /scene/beatTrigger     {1}</span>
+
+<span class="c-cmt"># Referencia: docs.derivative.ca/OSC_Out_CHOP</span></code>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">Unreal Engine 5 — Blueprint (pseudo-código visual)</div>
+    <code><span class="c-cmt">// En Level Blueprint:</span>
+Event BeginPlay
+  → Create OSC Server (LocalHost, Port: <span class="c-num">7000</span>)
+  → Bind On OSC Message Received (Server)
+      → Get OSC Message Address  <span class="c-cmt">// ej: "/wristX"</span>
+      → Branch (Address == <span class="c-str">"/particles/wristX"</span>)
+          → Get OSC Float (index: <span class="c-num">0</span>)
+          → Set Niagara Variable Float (NiagaraComp, <span class="c-str">"WristX"</span>, Value)
+
+<span class="c-cmt">// Para parámetros globales del sistema Niagara:</span>
+Set Niagara System Variable Float (System, <span class="c-str">"SpawnRate"</span>, <span class="c-num">5000.0</span>)</code>
+  </div>
+
+  <div class="callout">
+    <div class="c-label">Testing: TD enviando a sí mismo</div>
+    <p>Para testear OSC sin UE5, crea un <code>OSC In CHOP</code> en el mismo TD con el mismo puerto que el OSC Out. Verás los paquetes llegar en tiempo real. Esto confirma que el sistema OSC funciona antes de integrarlo con Unreal.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue1',null)">← TD × UE5</button>
+    <span class="page-pos">13 / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue3',null)">Spout →</button>
+  </div>
+</div>
+
+<!-- ═══ UE3 — SPOUT ═══ -->
+<div class="page" id="ue3">
+  <span class="page-kicker">Integración · Spout · Texture Streaming</span>
+  <h1 class="page-title">Spout: texturas<br>sin <em>latencia</em>.</h1>
+  <p class="page-sub">Spout comparte texturas directamente en la GPU entre aplicaciones en el mismo equipo. Cero latencia, cero costo de CPU. Es la forma de enviar datos de posición de partículas o cualquier imagen de TD a Unreal Engine.</p>
+
+  <div class="two-col">
+    <div>
+      <h3>En TouchDesigner</h3>
+      <div class="chain">
+        <span class="cn top">Render TOP</span><span class="arr">→</span>
+        <span class="cn top">Spout Out TOP</span>
+        <span class="chain-note">Sender: "particles"</span>
+      </div>
+      <p>El <code>Syphon/Spout Out TOP</code> transmite cualquier textura TOP a otras aplicaciones. El nombre del sender es lo que identifica la textura del lado receptor.</p>
+    </div>
+    <div>
+      <h3>En Unreal Engine 5</h3>
+      <p>Necesitas el plugin <strong>OWL Spout</strong> de Off World Live (gratuito). Añade un <strong>OWL Spout Receiver Component</strong> a cualquier Actor. Source Name debe coincidir exactamente con el sender de TD.</p>
+      <div class="chain">
+        <span class="cn comp">OWL Spout Receiver</span><span class="arr">→</span>
+        <span class="cn top">Render Target</span><span class="arr">→</span>
+        <span class="chain-note">Niagara Texture Parameter</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Caso de uso: posiciones de partículas como textura</h3>
+  <p>En lugar de enviar posiciones XYZ de partículas por OSC (lento para miles de partículas), se codifican en una textura: R=X, G=Y, B=Z. Cada pixel = una partícula. Niagara lee la textura en GPU y posiciona sus partículas exactamente donde TD las calculó.</p>
+  <div class="chain">
+    <span class="cn chop">Particle positions CHOP</span><span class="arr">→</span>
+    <span class="cn top">CHOP to TOP</span><span class="arr">(RGBA32f)</span>
+    <span class="arr">→</span>
+    <span class="cn top">Spout Out TOP</span><span class="arr">—GPU→</span>
+    <span class="cn comp">OWL Receiver</span><span class="arr">→</span>
+    <span class="chain-note">Niagara Scratchpad Module</span>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">HLSL — Niagara Scratchpad Module (leer textura de posiciones)</div>
+    <code><span class="c-cmt">// Recibe la textura Spout como Render Target en UE5</span>
+<span class="c-kw">void</span> <span class="c-fn">ReadSpoutPositions</span>(<span class="c-kw">out float3</span> OutPosition)
+{
+    <span class="c-cmt">// Calcular UV desde el índice de la partícula</span>
+    <span class="c-kw">float</span> texSize = <span class="c-num">512.0</span>;  <span class="c-cmt">// sqrt(max_particles)</span>
+    <span class="c-kw">float2</span> uv;
+    uv.x = <span class="c-fn">fmod</span>(<span class="c-fn">float</span>(ParticleIndex), texSize) / texSize;
+    uv.y = <span class="c-fn">floor</span>(<span class="c-fn">float</span>(ParticleIndex) / texSize) / texSize;
+
+    <span class="c-cmt">// Sample la textura (SpoutTex = Render Target del receiver)</span>
+    <span class="c-kw">float3</span> pos = SpoutTex.<span class="c-fn">SampleLevel</span>(SpoutSampler, uv, <span class="c-num">0</span>).rgb;
+
+    <span class="c-cmt">// Remapear de [0,1] a espacio mundo en UE5</span>
+    OutPosition = (pos - <span class="c-num">0.5</span>) * ScaleMultiplier;
+}</code>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue2',null)">← OSC</button>
+    <span class="page-pos">14a / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue4',null)">TouchEngine →</button>
+  </div>
+</div>
+
+<!-- ═══ UE4 — TOUCHENGINE ═══ -->
+<div class="page" id="ue4">
+  <span class="page-kicker">Integración · TouchEngine Plugin</span>
+  <h1 class="page-title">TouchEngine:<br>TD <em>dentro</em> de Unreal.</h1>
+  <p class="page-sub">TouchEngine es la integración más profunda posible: carga un componente .tox de TouchDesigner directamente como subproceso dentro de UE5. Intercambia CHOP, DAT y TOP por memoria compartida con latencia sub-milisegundo.</p>
+
+  <div class="callout rose">
+    <div class="c-label">Requisito de licencia</div>
+    <p>TouchEngine requiere licencia TD <strong>Commercial, Education, o Pro</strong>. No funciona con la licencia Non-Commercial. Si no tienes licencia, usa la combinación <strong>OSC + Spout</strong> para lograr resultados similares (aunque con más trabajo de configuración).</p>
+  </div>
+
+  <h2>Cómo funciona TouchEngine</h2>
+  <div class="two-col">
+    <div>
+      <h3>Del lado de TouchDesigner</h3>
+      <ol class="step-list">
+        <li>Diseña tu componente en TD como un <code>Base COMP</code> con inputs y outputs bien definidos en la pestaña de parámetros</li>
+        <li>Nombra claramente los inputs (In CHOP, In TOP) y outputs (Out CHOP, Out TOP) dentro del COMP</li>
+        <li>Guarda el COMP como archivo .tox (clic derecho → Save Component)</li>
+        <li>El .tox se carga en UE5 — TouchDesigner corre como subproceso invisible</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Del lado de Unreal Engine 5</h3>
+      <ol class="step-list">
+        <li>Instala TouchEngine-UE plugin desde <a href="https://github.com/TouchDesigner/TouchEngine-UE" target="_blank">github.com/TouchDesigner/TouchEngine-UE</a></li>
+        <li>Añade un componente <strong>TouchEngine Component</strong> a un Actor en la escena</li>
+        <li>Especifica la ruta al archivo .tox en los parámetros del componente</li>
+        <li>En Blueprint: usa <strong>Set TouchEngine Input</strong> / <strong>Get TouchEngine Output</strong> para intercambiar datos</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">Unreal Engine 5 — Blueprint pseudocódigo TouchEngine</div>
+    <code><span class="c-cmt">// Configurar inputs hacia TD (desde UE5 → TD)</span>
+TouchEngineComp.<span class="c-fn">SetCHOPInput</span>(<span class="c-str">"inputPositions"</span>, CHOPData)
+TouchEngineComp.<span class="c-fn">SetTOPInput</span>(<span class="c-str">"inputTexture"</span>, RenderTarget)
+
+<span class="c-cmt">// Obtener outputs desde TD (de TD → UE5)</span>
+<span class="c-kw">float[]</span> values = TouchEngineComp.<span class="c-fn">GetCHOPOutput</span>(<span class="c-str">"outputPositions"</span>)
+UTexture2D tex = TouchEngineComp.<span class="c-fn">GetTOPOutput</span>(<span class="c-str">"outputTexture"</span>)
+
+<span class="c-cmt">// Parámetros custom del .tox (sliders, toggles)</span>
+TouchEngineComp.<span class="c-fn">SetFloatByName</span>(<span class="c-str">"EmitRate"</span>, <span class="c-num">5000.0</span>)
+TouchEngineComp.<span class="c-fn">SetBoolByName</span>(<span class="c-str">"AudioReactive"</span>, <span class="c-kw">true</span>)</code>
+  </div>
+
+  <div class="callout jade">
+    <div class="c-label">Ventaja clave: Editor Mode</div>
+    <p>TouchEngine puede correr dentro del <strong>Unreal Editor</strong> sin necesidad de presionar Play o hacer packaging del juego. Puedes ver el resultado del .tox de TD en tiempo real mientras diseñas la escena en UE5. Esta es la diferencia que hace de TouchEngine el workflow profesional estándar para virtual production.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue3',null)">← Spout</button>
+    <span class="page-pos">14b / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue5',null)">Niagara →</button>
+  </div>
+</div>
+
+<!-- ═══ UE5 — NIAGARA ═══ -->
+<div class="page" id="ue5">
+  <span class="page-kicker">Integración · Niagara · Unreal Engine 5</span>
+  <h1 class="page-title">Niagara: partículas<br>con <em>calidad cinematográfica</em>.</h1>
+
+  <div class="exercise">
+    <div class="ex-head" onclick="togEx(this)">
+      <span class="ex-lv lv5">Avanzado</span>
+      <span class="ex-ttl">Setup de Niagara System para recibir datos de TD vía Spout</span>
+      <span class="ex-chev">▾</span>
+    </div>
+    <div class="ex-body">
+      <div class="obj-row">
+        <div class="obj-cell"><div class="obj-label">Resultado</div><div class="obj-text">Las posiciones de partículas calculadas en TD se renderizan en UE5 con iluminación Lumen, Bloom volumétrico y profundidad de campo.</div></div>
+        <div class="obj-cell hl"><div class="obj-label">Aprenderás</div><div class="obj-text">Crear Niagara System GPU, Scratchpad Module para leer textura Spout, conectar OSC a parámetros Niagara, Lumen y Post Process.</div></div>
+      </div>
+      <ul class="step-list">
+        <li><strong>Crear Niagara System:</strong> En Content Browser → clic derecho → FX → Niagara System → New System from Template → <strong>Empty</strong>. Abrir el editor de Niagara.</li>
+        <li><strong>GPU Simulation:</strong> En las propiedades del sistema → <strong>Sim Target</strong> = <strong>GPUCompute Sim</strong>. Sin esto, 1M partículas bajaría a 15fps. Con GPU, puede manejar 5–10M.</li>
+        <li><strong>Recibir textura Spout:</strong> Añade al sistema un parámetro de usuario de tipo <strong>Texture2D</strong>, nombrado <code>SpoutTex</code>. Este se alimenta desde el OWL Spout Receiver Component del Actor en escena.</li>
+        <li><strong>Scratchpad Module:</strong> En Particle Update → Add Module → Scratch Pad. Escribe el HLSL de lectura de textura (ver página anterior). Este módulo posiciona cada partícula según el pixel correspondiente en la textura Spout.</li>
+        <li><strong>Conectar OSC a Spawn Rate:</strong> En Level Blueprint: cuando llega mensaje OSC <code>/particles/spawnRate</code>, conecta el float al <strong>System Variable Float</strong> del Niagara Component.</li>
+        <li><strong>Post Process de UE5:</strong> En el Post Process Volume de la escena: Bloom Intensity = 2.0, Bloom Threshold = 0.5. Depth of Field (Bokeh) focalizado en el centro de la nube de partículas. El resultado es radicalmente diferente al render de TD.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue4',null)">← TouchEngine</button>
+    <span class="page-pos">15a / 16</span>
+    <button class="pn-btn primary" onclick="nav('ue6',null)">Pipeline completo →</button>
+  </div>
+</div>
+
+<!-- ═══ UE6 — PIPELINE COMPLETO ═══ -->
+<div class="page" id="ue6">
+  <span class="page-kicker">Integración · Pipeline completo de producción</span>
+  <h1 class="page-title">Pipeline<br><em>completo</em> profesional.</h1>
+
+  <div class="diagram-wrap">
+    <div class="diagram-label">▸ ARQUITECTURA COMPLETA: TD → UE5 — SISTEMA DE PRODUCCIÓN</div>
+    <svg viewBox="0 0 860 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:560px">
+      <defs>
+        <marker id="apb" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#4A90D9"/></marker>
+        <marker id="apg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#54C46E"/></marker>
+        <marker id="apc" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#00D4FF"/></marker>
+        <marker id="appu" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#9B54C4"/></marker>
+      </defs>
+      <!-- TD box -->
+      <rect x="4" y="4" width="400" height="252" rx="6" fill="#080E08" stroke="#1A3C20" stroke-width="1.5"/>
+      <text x="18" y="22" fill="rgba(84,196,110,.5)" font-family="DM Sans,sans-serif" font-size="9" font-weight="600">TOUCHDESIGNER</text>
+      <!-- Input nodes -->
+      <rect x="14" y="30" width="110" height="48" rx="4" fill="#0D2640"/>
+      <rect x="14" y="30" width="110" height="6" rx="4" fill="#4A90D9"/>
+      <rect x="14" y="34" width="110" height="2" fill="#4A90D9"/>
+      <text x="69" y="50" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="8.5">Video Device In</text>
+      <text x="69" y="62" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="7.5">webcam 720p</text>
+      <rect x="14" y="90" width="110" height="48" rx="4" fill="#1A3C20"/>
+      <rect x="14" y="90" width="110" height="6" rx="4" fill="#54C46E"/>
+      <rect x="14" y="94" width="110" height="2" fill="#54C46E"/>
+      <text x="69" y="110" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="8.5">Audio Device In</text>
+      <text x="69" y="122" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="7.5">→ Spectrum CHOP</text>
+      <rect x="14" y="150" width="110" height="48" rx="4" fill="#28144A"/>
+      <rect x="14" y="150" width="110" height="6" rx="4" fill="#9B54C4"/>
+      <rect x="14" y="154" width="110" height="2" fill="#9B54C4"/>
+      <text x="69" y="170" text-anchor="middle" fill="#D8A8FF" font-family="DM Mono,monospace" font-size="8.5">MediaPipe.tox</text>
+      <text x="69" y="182" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="7.5">Pose / Hands</text>
+      <!-- Processing -->
+      <rect x="160" y="18" width="130" height="220" rx="4" fill="#0A100A" stroke="#1A3C20" stroke-width="1"/>
+      <text x="225" y="36" text-anchor="middle" fill="rgba(84,196,110,.4)" font-family="DM Sans,sans-serif" font-size="8">PROCESAMIENTO</text>
+      <rect x="168" y="44" width="114" height="36" rx="3" fill="#1A0A18" stroke="#FF3CAC" stroke-width="1.5"/>
+      <text x="225" y="58" text-anchor="middle" fill="#F8A8E8" font-family="DM Mono,monospace" font-size="8.5">ParticlesGPU</text>
+      <text x="225" y="70" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="7.5">500K particles GPU</text>
+      <rect x="168" y="92" width="114" height="36" rx="3" fill="#0D2640"/>
+      <text x="225" y="106" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="8.5">Optical Flow TOP</text>
+      <text x="225" y="118" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="7.5">→ force field</text>
+      <rect x="168" y="140" width="114" height="36" rx="3" fill="#1A3C20"/>
+      <text x="225" y="154" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="8.5">CHOP to TOP</text>
+      <text x="225" y="166" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="7.5">pos XYZ → texture</text>
+      <rect x="168" y="188" width="114" height="36" rx="3" fill="#1A3C20"/>
+      <text x="225" y="202" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="8.5">Lag + Math CHOPs</text>
+      <text x="225" y="214" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="7.5">wrist pos smooth</text>
+      <!-- Protocols -->
+      <rect x="316" y="30" width="80" height="44" rx="3" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1.5"/>
+      <text x="356" y="50" text-anchor="middle" fill="#A8F8FF" font-family="DM Mono,monospace" font-size="8.5">Spout Out</text>
+      <text x="356" y="62" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="7.5">pos texture</text>
+      <rect x="316" y="90" width="80" height="44" rx="3" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1.5"/>
+      <text x="356" y="110" text-anchor="middle" fill="#A8F8FF" font-family="DM Mono,monospace" font-size="8.5">OSC Out</text>
+      <text x="356" y="122" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="7.5">port 7000</text>
+      <rect x="316" y="150" width="80" height="44" rx="3" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="356" y="170" text-anchor="middle" fill="rgba(168,248,255,.5)" font-family="DM Mono,monospace" font-size="8.5">TouchEngine</text>
+      <text x="356" y="182" text-anchor="middle" fill="rgba(80,200,232,.5)" font-family="DM Sans,sans-serif" font-size="7.5">Commercial</text>
+      <!-- UE5 box -->
+      <rect x="452" y="4" width="404" height="252" rx="6" fill="#08080E" stroke="#28144A" stroke-width="1.5"/>
+      <text x="466" y="22" fill="rgba(155,84,196,.5)" font-family="DM Sans,sans-serif" font-size="9" font-weight="600">UNREAL ENGINE 5</text>
+      <!-- UE5 receivers -->
+      <rect x="462" y="30" width="120" height="44" rx="3" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1.5"/>
+      <text x="522" y="50" text-anchor="middle" fill="#A8F8FF" font-family="DM Mono,monospace" font-size="8">OWL Spout Receiver</text>
+      <text x="522" y="62" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="7.5">→ Render Target</text>
+      <rect x="462" y="90" width="120" height="44" rx="3" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1.5"/>
+      <text x="522" y="110" text-anchor="middle" fill="#A8F8FF" font-family="DM Mono,monospace" font-size="8">OSC Plugin UE5</text>
+      <text x="522" y="122" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="7.5">Level Blueprint</text>
+      <!-- Niagara -->
+      <rect x="462" y="148" width="240" height="100" rx="4" fill="#1C0C36" stroke="#9B54C4" stroke-width="1.5"/>
+      <text x="582" y="168" text-anchor="middle" fill="#D8A8FF" font-family="DM Mono,monospace" font-size="9" font-weight="600">Niagara System</text>
+      <text x="582" y="182" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">GPU Sim Target</text>
+      <text x="582" y="196" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Scratchpad: lee SpoutTex → posición</text>
+      <text x="582" y="210" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">OSC → SpawnRate / Forces</text>
+      <text x="582" y="224" text-anchor="middle" fill="#9858B8" font-family="DM Sans,sans-serif" font-size="8">Lumen + PostProcess + Bloom</text>
+      <!-- Output -->
+      <rect x="720" y="30" width="128" height="220" rx="4" fill="#0A0A0A" stroke="#333"/>
+      <text x="784" y="90" text-anchor="middle" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9" font-weight="600">OUTPUT</text>
+      <text x="784" y="120" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Sans,sans-serif" font-size="8">Pantalla /</text>
+      <text x="784" y="135" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Sans,sans-serif" font-size="8">LED Wall /</text>
+      <text x="784" y="150" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Sans,sans-serif" font-size="8">Proyector /</text>
+      <text x="784" y="165" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Sans,sans-serif" font-size="8">Capture</text>
+      <!-- Wires -->
+      <line x1="124" y1="54" x2="160" y2="62" stroke="#4A90D9" stroke-width="1" opacity=".6" marker-end="url(#apb)"/>
+      <line x1="124" y1="114" x2="160" y2="112" stroke="#54C46E" stroke-width="1" opacity=".6" marker-end="url(#apg)"/>
+      <line x1="124" y1="174" x2="160" y2="160" stroke="#9B54C4" stroke-width="1" opacity=".6" marker-end="url(#appu)"/>
+      <line x1="282" y1="162" x2="316" y2="52" stroke="#C46A3A" stroke-width="1" opacity=".5" marker-end="url(#apc)"/>
+      <line x1="282" y1="206" x2="316" y2="112" stroke="#54C46E" stroke-width="1" opacity=".5" marker-end="url(#apc)"/>
+      <line x1="396" y1="52" x2="462" y2="52" stroke="#00D4FF" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#apc)"/>
+      <line x1="396" y1="112" x2="462" y2="112" stroke="#00D4FF" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#apc)"/>
+      <line x1="522" y1="74" x2="522" y2="148" stroke="#9B54C4" stroke-width="1.5" marker-end="url(#appu)"/>
+      <line x1="522" y1="134" x2="522" y2="148" stroke="#9B54C4" stroke-width="1.5" marker-end="url(#appu)"/>
+      <line x1="702" y1="198" x2="720" y2="140" stroke="#9B54C4" stroke-width="1.5" marker-end="url(#apb)"/>
+      <!-- Protocol labels -->
+      <text x="420" y="46" fill="rgba(0,212,255,.5)" font-family="DM Sans,sans-serif" font-size="8" text-anchor="middle">Spout</text>
+      <text x="420" y="106" fill="rgba(0,212,255,.5)" font-family="DM Sans,sans-serif" font-size="8" text-anchor="middle">OSC UDP</text>
+    </svg>
+  </div>
+
+  <div class="callout jade mt24">
+    <div class="c-label">Este sistema completo en la práctica</div>
+    <p>Tu cuerpo capturado por webcam (MediaPipe → TD) controla la posición de emisión de 500K partículas (GPU en TD). Las posiciones viajan por Spout a UE5, donde Niagara las renderiza con calidad Lumen. El audio controla el spawn rate por OSC. Este es exactamente el tipo de sistema que artistas como Mehmet Pala usan en instalaciones y performances profesionales.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue5',null)">← Niagara</button>
+    <span class="page-pos">15b / 16</span>
+    <button class="pn-btn primary" onclick="nav('bp',null)">Buenas prácticas →</button>
+  </div>
+</div>
+
+<!-- ═══ BP — BUENAS PRÁCTICAS ═══ -->
+<div class="page" id="bp">
+  <span class="page-kicker">Craft profesional</span>
+  <h1 class="page-title">Buenas prácticas:<br><em>proyectos</em> que escalan.</h1>
+
+  <h2>Organización de redes de nodos</h2>
+  <div class="two-col">
+    <div>
+      <h3>Naming conventions</h3>
+      <table class="param-table">
+        <tr><th>Tipo</th><th>Convención</th><th>Ejemplo</th></tr>
+        <tr><td>CHOPs de control</td><td>camelCase + función</td><td><code>audioRMS</code>, <code>wristPos</code></td></tr>
+        <tr><td>TOPs de proceso</td><td>función descriptiva</td><td><code>opticalFlow</code>, <code>colorMask</code></td></tr>
+        <tr><td>COMPs módulo</td><td>dominio en minúsculas</td><td><code>tracking</code>, <code>particles</code></td></tr>
+        <tr><td>Temporales</td><td>prefijo tmp_</td><td><code>tmp_test</code>, <code>tmp_debug</code></td></tr>
+        <tr><td>Outputs</td><td>sufijo _out</td><td><code>render_out</code>, <code>spout_out</code></td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Arquitectura modular</h3>
+      <ol class="step-list">
+        <li>El network principal debe tener menos de 20 nodos visibles. Toda la complejidad va dentro de Container COMPs.</li>
+        <li>Cada COMP tiene un propósito único. El COMP de tracking no hace partículas. El COMP de partículas no hace audio.</li>
+        <li>Los COMPs se comunican por nombres conocidos, no por rutas relativas largas.</li>
+        <li>Guarda módulos útiles como .tox para reutilizarlos en otros proyectos.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>Debugging visual</h2>
+  <table class="cmp-table">
+    <tr><th>Síntoma</th><th>Diagnóstico</th><th>Solución</th></tr>
+    <tr><td>Nodo con borde morado</td><td>Cooking más de un frame — cuello de botella</td><td>Performance Monitor (Alt+Shift+P) → identificar el nodo más lento</td></tr>
+    <tr><td>Nodo en rojo</td><td>Error en el operador</td><td>Alt+E → Consola → leer el mensaje de error exacto</td></tr>
+    <tr><td>CHOP con valor inesperado</td><td>Input incorrecto o rango mal mapeado</td><td>Click en el CHOP para ver su viewer · añadir Print CHOP después</td></tr>
+    <tr><td>TOP en negro</td><td>Input vacío o nodo en bypass</td><td>Verificar que el nodo upstream esté cocinando · revisar resolución</td></tr>
+    <tr><td>Framerate bajo</td><td>Cuello de botella de GPU o CPU</td><td>Perform Mode (F1) · Bypass secciones para aislar el problema</td></tr>
+    <tr><td>Partículas no aparecen</td><td>Geometry COMP sin Camera o falta de material</td><td>Verificar que Camera, Light y Geometry COMP estén conectados al Render TOP</td></tr>
+  </table>
+
+  <h2>Optimización básica</h2>
+  <table class="param-table">
+    <tr><th>Área</th><th>Valor recomendado</th><th>Impacto</th></tr>
+    <tr><td>Resolución TOP interna</td><td>256×256 o 512×512</td><td>Solo el output final necesita 1920×1080 — procesar en baja res ahorra GPU</td></tr>
+    <tr><td>Cook Rate de módulos UI</td><td>10–30 fps</td><td>Paneles de control y configuraciones no necesitan 60fps</td></tr>
+    <tr><td>MediaPipe modelos activos</td><td>Solo los necesarios</td><td>Cada modelo = CPU constante — desactiva face/object si solo usas hands</td></tr>
+    <tr><td>Max Particles inicio</td><td>100K</td><td>Escala gradualmente monitoreando framerate en Perform Mode</td></tr>
+    <tr><td>Bypass durante desarrollo</td><td>Usar activamente</td><td>Bypass (clic derecho) en nodos costosos durante pruebas aísla problemas</td></tr>
+  </table>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('ue6',null)">← Pipeline completo</button>
+    <span class="page-pos">15 / 16</span>
+    <button class="pn-btn primary" onclick="nav('res',null)">Recursos oficiales →</button>
+  </div>
+</div>
+
+<!-- ═══ RES — RECURSOS ═══ -->
+<div class="page" id="res">
+  <span class="page-kicker">Recursos de referencia</span>
+  <h1 class="page-title">Documentación,<br>comunidad y <em>currículo oficial</em>.</h1>
+  <p class="page-sub">Los recursos más valiosos para continuar aprendiendo — curados y verificados con el currículo oficial de Derivative.</p>
+
+  <h2>Documentación oficial</h2>
+  <div class="resource-grid">
+    <a class="res-card" href="https://learn.derivative.ca" target="_blank">
+      <div class="res-tag">Currículo Oficial · Gratis</div>
+      <div class="res-title">learn.derivative.ca</div>
+      <div class="res-desc">100 Series (fundamentals) + 200 Series (intermediate). 80+ unidades con video, referencia escrita y archivo .toe descargable por tópico. Punto de partida obligatorio.</div>
+    </a>
+    <a class="res-card" href="https://docs.derivative.ca" target="_blank">
+      <div class="res-tag">Referencia técnica · Completa</div>
+      <div class="res-title">docs.derivative.ca</div>
+      <div class="res-desc">Wiki técnica completa. Cada operador tiene su propia página con todos los parámetros, ejemplos Python y notas de compatibilidad. La fuente de verdad de TD.</div>
+    </a>
+    <a class="res-card" href="https://forum.derivative.ca" target="_blank">
+      <div class="res-tag">Comunidad · Muy activa</div>
+      <div class="res-title">forum.derivative.ca</div>
+      <div class="res-desc">Foro oficial de TD. Preguntas resueltas en horas por Derivative y usuarios avanzados. Busca antes de preguntar — la mayoría de problemas ya tienen respuesta.</div>
+    </a>
+    <a class="res-card" href="https://derivative.ca/UserGuide/Tutorials" target="_blank">
+      <div class="res-tag">Tutorials · Video</div>
+      <div class="res-title">Tutorials Oficial</div>
+      <div class="res-desc">Colección de talleres, presentaciones de TD Summits y tutoriales en video por operador. Incluye grabaciones de Berlin Summit 2024.</div>
+    </a>
+  </div>
+
+  <h2>Recursos de la comunidad</h2>
+  <div class="resource-grid">
+    <a class="res-card" href="https://interactiveimmersive.io" target="_blank">
+      <div class="res-tag">Cursos · Para artistas</div>
+      <div class="res-title">Interactive & Immersive HQ</div>
+      <div class="res-desc">Los cursos más completos orientados a artistas. Enfocados en proyectos reales, instalaciones y workflows profesionales. Mencionados en el currículo oficial de Derivative.</div>
+    </a>
+    <a class="res-card" href="https://github.com/torinmb/mediapipe-touchdesigner" target="_blank">
+      <div class="res-tag">Plugin · GitHub · Gratis</div>
+      <div class="res-title">MediaPipe TD Plugin</div>
+      <div class="res-desc">Plugin GPU de Torin Blankensmith para tracking de cuerpo, manos, cara y objetos desde webcam. Presentado en SIGGRAPH 2024. Indispensable para tracking sin hardware especializado.</div>
+    </a>
+    <a class="res-card" href="https://alltd.org" target="_blank">
+      <div class="res-tag">Directorio · Curado</div>
+      <div class="res-title">AllTD.org</div>
+      <div class="res-desc">Directorio de tutoriales de toda la comunidad, filtrable por nivel, operador y tema. Incluye recursos de YouTube, blogs y tutoriales escritos.</div>
+    </a>
+    <a class="res-card" href="https://thenodeinstitute.org" target="_blank">
+      <div class="res-tag">Cursos · Especializados</div>
+      <div class="res-title">The Node Institute</div>
+      <div class="res-desc">Cursos especializados de TD con instructores de referencia internacional. Muy técnicos y profundos. Ideal después de los fundamentos.</div>
+    </a>
+    <a class="res-card" href="https://github.com/TouchDesigner" target="_blank">
+      <div class="res-tag">GitHub · Oficial</div>
+      <div class="res-title">TouchDesigner GitHub</div>
+      <div class="res-desc">Repos oficiales: TouchEngine-UE plugin (github.com/TouchDesigner/TouchEngine-UE), samples, herramientas de integración y ejemplos de producción.</div>
+    </a>
+    <a class="res-card" href="https://derivative.ca/community-post" target="_blank">
+      <div class="res-tag">Comunidad · Assets</div>
+      <div class="res-title">Community Feed</div>
+      <div class="res-desc">Proyectos, patches y tutoriales compartidos por la comunidad global. Incluye archivos .toe descargables y la recomendada biblioteca Olib de alphamoonbase.</div>
+    </a>
+  </div>
+
+  <h2>Herramienta in-app indispensable</h2>
+  <div class="callout jade mt0">
+    <div class="c-label">OP Snippets — 700+ ejemplos oficiales dentro de TD</div>
+    <p>En TouchDesigner: <strong>Help → OP Snippets</strong>. Biblioteca de 700+ redes de nodos funcionando, uno por cada operador importante. Antes de buscar en internet cómo funciona un nodo, revisa su snippet — incluye el ejemplo más básico hasta casos de uso avanzados, y puedes modificarlo en tiempo real. Es el recurso de aprendizaje más subestimado de TD.</p>
+  </div>
+
+  <div class="callout teal mt16">
+    <div class="c-label">Ruta de aprendizaje recomendada para artistas</div>
+    <p><strong>Semanas 1–2:</strong> Currículo 100 Series completo en learn.derivative.ca. <strong>Mes 2:</strong> Ejercicios 1–4 de esta guía con proyectos propios. <strong>Mes 3:</strong> Ejercicios 5–7 + primer proyecto real (performance o instalación simple). <strong>Mes 4–5:</strong> Integración con UE5 (ejercicios U1–U6). <strong>Mes 6+:</strong> Currículo 200 Series + proyectos de comunidad + touchengine si tienes licencia comercial.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('bp',null)">← Buenas prácticas</button>
+    <span class="page-pos">16 / 16</span>
+    <button class="pn-btn primary" onclick="nav('p0',null)">↑ Volver al inicio</button>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="ft-logo">TouchDesigner — Guía Profesional para Animadores</div>
+  <div class="ft-links">
+    <a href="https://learn.derivative.ca" target="_blank">learn.derivative.ca</a>
+    <a href="https://docs.derivative.ca" target="_blank">docs.derivative.ca</a>
+    <a href="https://forum.derivative.ca" target="_blank">forum.derivative.ca</a>
+    <a href="https://github.com/torinmb/mediapipe-touchdesigner" target="_blank">MediaPipe Plugin</a>
+  </div>
+</footer>
+
+<script>
+// ─── Navigation ───
+const pages = {};
+document.querySelectorAll('.page').forEach(p => { pages[p.id] = p; });
+
+function nav(id, sidebarEl) {
+  // hide all
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // show target
+  const target = pages[id];
+  if (target) {
+    target.classList.add('active');
+    document.getElementById('main').scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }
+  // update sidebar
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  if (sidebarEl) {
+    sidebarEl.classList.add('active');
+  } else {
+    // find matching sidebar item
+    document.querySelectorAll('.sb-item').forEach(i => {
+      if (i.getAttribute('onclick') && i.getAttribute('onclick').includes(`'${id}'`)) {
+        i.classList.add('active');
+      }
+    });
+  }
+  // close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ─── Exercise toggles ───
+function togEx(head) {
+  const body = head.nextElementSibling;
+  const chev = head.querySelector('.ex-chev');
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+
+// ─── Mobile sidebar ───
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('sidebar');
+  const hamburger = document.getElementById('hamburger');
+  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+    sidebar.classList.remove('open');
+  }
+});
+
+// ─── Open first exercise on first load ───
+document.addEventListener('DOMContentLoaded', () => {
+  const firstEx = document.querySelector('#e1 .ex-head');
+  if (firstEx) togEx(firstEx);
+});
+</script>
+
+<!-- ═══════════════════════════════════════
+     PAGE PY — PYTHON EN DATs
+═══════════════════════════════════════ -->
+<div class="page" id="py">
+  <span class="page-kicker">Scripting · Python · DAT Operators</span>
+  <h1 class="page-title">Python en TD:<br>lógica cuando los<br><em>nodos no alcanzan</em>.</h1>
+  <p class="page-sub">TouchDesigner usa Python 3 para scripting. No es necesario dominar Python para empezar — con unas pocas funciones y el sistema de callbacks puedes resolver el 80% de los casos que los nodos solos no pueden manejar.</p>
+
+  <h2>¿Cuándo usar Python?</h2>
+  <div class="two-col">
+    <div class="callout teal" style="margin:0">
+      <div class="c-label">Usa nodos cuando puedas</div>
+      <p>Los nodos son más rápidos, más visuales y más fáciles de debuggear. Siempre intenta resolver un problema con nodos primero. Python es para la lógica que los nodos no pueden expresar: condicionales complejos, generación de texto, acceso a APIs web, manipulación de estructuras de datos.</p>
+    </div>
+    <div class="callout" style="margin:0">
+      <div class="c-label">Usa Python para</div>
+      <p>Callbacks de eventos (cuando ocurre X, ejecuta Y), lógica condicional (if/else entre sistemas), acceso a archivos o APIs externas, procesamiento de texto y tablas DAT complejas, generación procedural de contenido, automatización del network.</p>
+    </div>
+  </div>
+
+  <h2>Los tres tipos principales de scripting</h2>
+
+  <h3>1. Script DAT — scripts independientes</h3>
+  <p>El <code>Script DAT</code> ejecuta código Python en respuesta a eventos. Es el bloque de scripting más flexible.</p>
+  <div class="code-block">
+    <div class="code-lang">Script DAT — Python</div>
+    <code><span class="c-cmt"># Script DAT: ejecutado por pulso o cada frame</span>
+<span class="c-cmt"># 'me' = referencia al DAT actual</span>
+<span class="c-cmt"># Acceder a otros operadores:</span>
+noise_top = op(<span class="c-str">'noise1'</span>)          <span class="c-cmt"># por nombre</span>
+audio_chop = op(<span class="c-str">'../audio/rms'</span>)     <span class="c-cmt"># por ruta relativa</span>
+
+<span class="c-cmt"># Leer valores de un CHOP</span>
+volume = op(<span class="c-str">'audioRMS'</span>)[<span class="c-num">0</span>]
+wrist_x = op(<span class="c-str">'wristPos'</span>)[<span class="c-str">'pose:15:x'</span>]
+
+<span class="c-cmt"># Escribir parámetros de un operador</span>
+op(<span class="c-str">'noise1'</span>).par.period = <span class="c-num">50</span> + volume * <span class="c-num">200</span>
+op(<span class="c-str">'particlesgpu1'</span>).par.emitrate = <span class="c-fn">int</span>(volume * <span class="c-num">5000</span>)
+
+<span class="c-cmt"># Lógica condicional (imposible solo con nodos)</span>
+<span class="c-kw">if</span> volume > <span class="c-num">0.8</span>:
+    op(<span class="c-str">'trigger_out'</span>).par.value0 = <span class="c-num">1</span>
+    op(<span class="c-str">'flash_comp'</span>).par.display = <span class="c-num">1</span>
+<span class="c-kw">else</span>:
+    op(<span class="c-str">'flash_comp'</span>).par.display = <span class="c-num">0</span></code>
+  </div>
+
+  <h3>2. CHOP Execute DAT — callbacks de CHOPs</h3>
+  <p>Ejecuta código Python cuando un CHOP cambia de valor. Ideal para detectar picos de audio, beats, o cualquier umbral de señal.</p>
+  <div class="code-block">
+    <div class="code-lang">CHOP Execute DAT — Callback de valor de canal</div>
+    <code><span class="c-cmt"># Se ejecuta cuando el canal 'chan1' cruza un umbral</span>
+<span class="c-kw">def</span> <span class="c-fn">onValueChange</span>(channel, sampleIndex, val, prev):
+    <span class="c-cmt"># 'channel' = el canal CHOP que cambió</span>
+    <span class="c-cmt"># 'val' = nuevo valor, 'prev' = valor anterior</span>
+    <span class="c-kw">if</span> val > <span class="c-num">0.9</span> <span class="c-kw">and</span> prev <= <span class="c-num">0.9</span>:
+        <span class="c-cmt"># Detectar flanco de subida (beat trigger)</span>
+        op(<span class="c-str">'beatCounter'</span>).par.value0 += <span class="c-num">1</span>
+        op(<span class="c-str">'colorCycle'</span>).par.hueoffset = val * <span class="c-num">360</span>
+        print(<span class="c-str">f"Beat detectado! Valor: {val:.3f}"</span>)
+
+<span class="c-kw">def</span> <span class="c-fn">onOffToOn</span>(channel, sampleIndex, val, prev):
+    <span class="c-cmt"># Cuando el canal cruza 0.5 (de off a on)</span>
+    op(<span class="c-str">'effect_trigger'</span>).par.initialize.pulse()</code>
+  </div>
+
+  <h3>3. DAT Execute — callbacks de tablas</h3>
+  <p>Se ejecuta cuando cambia el contenido de una tabla DAT. Útil para procesar datos de MediaPipe u otras fuentes tabulares.</p>
+  <div class="code-block">
+    <div class="code-lang">DAT Execute — Procesamiento de tabla MediaPipe</div>
+    <code><span class="c-kw">def</span> <span class="c-fn">onTableChange</span>(dat):
+    <span class="c-cmt"># Se ejecuta cada vez que la tabla DAT cambia (cada frame con MediaPipe)</span>
+    <span class="c-kw">if</span> dat.numRows < <span class="c-num">2</span>:
+        <span class="c-kw">return</span>  <span class="c-cmt"># tabla vacía</span>
+
+    <span class="c-cmt"># Leer posición de la muñeca izquierda (landmark 15)</span>
+    <span class="c-kw">try</span>:
+        wrist_row = dat.findCell(<span class="c-str">'15'</span>, cols=[<span class="c-num">0</span>])  <span class="c-cmt"># columna 0 = landmark_id</span>
+        <span class="c-kw">if</span> wrist_row:
+            x = <span class="c-fn">float</span>(dat[wrist_row.row, <span class="c-num">1</span>])  <span class="c-cmt"># columna 1 = x</span>
+            y = <span class="c-fn">float</span>(dat[wrist_row.row, <span class="c-num">2</span>])  <span class="c-cmt"># columna 2 = y</span>
+            <span class="c-cmt"># Escribir en tabla de salida procesada</span>
+            op(<span class="c-str">'wrist_processed'</span>)[<span class="c-num">0</span>, <span class="c-str">'x'</span>] = <span class="c-fn">round</span>(x, <span class="c-num">4</span>)
+            op(<span class="c-str">'wrist_processed'</span>)[<span class="c-num">0</span>, <span class="c-str">'y'</span>] = <span class="c-fn">round</span>(y, <span class="c-num">4</span>)
+    <span class="c-kw">except</span> <span class="c-fn">Exception</span> <span class="c-kw">as</span> e:
+        print(<span class="c-str">f"Error procesando landmarks: {e}"</span>)</code>
+  </div>
+
+  <h2>El sistema de parámetros: leer y escribir</h2>
+  <div class="code-block">
+    <div class="code-lang">Python — Referencia rápida de acceso a operadores</div>
+    <code><span class="c-cmt"># ─── ACCESO A OPERADORES ───</span>
+op(<span class="c-str">'nombre'</span>)           <span class="c-cmt"># buscar por nombre en el mismo COMP</span>
+op(<span class="c-str">'../hermano'</span>)      <span class="c-cmt"># buscar en el COMP padre</span>
+op(<span class="c-str">'/proyecto/mod'</span>)   <span class="c-cmt"># ruta absoluta desde /</span>
+
+<span class="c-cmt"># ─── LEER PARÁMETROS ───</span>
+val = op(<span class="c-str">'noise1'</span>).par.period.val     <span class="c-cmt"># valor actual</span>
+val = op(<span class="c-str">'noise1'</span>).par.period.eval()  <span class="c-cmt"># valor evaluado (con expresiones)</span>
+
+<span class="c-cmt"># ─── ESCRIBIR PARÁMETROS ───</span>
+op(<span class="c-str">'noise1'</span>).par.period = <span class="c-num">100</span>         <span class="c-cmt"># asignar valor directo</span>
+op(<span class="c-str">'noise1'</span>).par.period.expr = <span class="c-str">'absTime.seconds'</span>  <span class="c-cmt"># asignar expresión</span>
+
+<span class="c-cmt"># ─── LEER CHOPs ───</span>
+op(<span class="c-str">'audioRMS'</span>)[<span class="c-num">0</span>]               <span class="c-cmt"># primer canal</span>
+op(<span class="c-str">'audioRMS'</span>)[<span class="c-str">'chan1'</span>]         <span class="c-cmt"># canal por nombre</span>
+op(<span class="c-str">'audioRMS'</span>).numChans         <span class="c-cmt"># número de canales</span>
+
+<span class="c-cmt"># ─── TIEMPO EN TD ───</span>
+absTime.seconds   <span class="c-cmt"># segundos desde que inició TD</span>
+absTime.frame     <span class="c-cmt"># frame actual</span>
+me.time.seconds   <span class="c-cmt"># tiempo del COMP actual</span>
+
+<span class="c-cmt"># ─── PULSAR PARÁMETROS (botones/triggers) ───</span>
+op(<span class="c-str">'geo1'</span>).par.initialize.pulse()   <span class="c-cmt"># equivale a presionar el botón</span></code>
+  </div>
+
+  <div class="callout jade">
+    <div class="c-label">Recurso oficial: Python en TD</div>
+    <p>La documentación completa de Python en TD está en <strong>docs.derivative.ca/Python</strong>. Dentro de TD: Help → Python Examples abre un archivo .toe con 100+ ejemplos funcionando organizados por tema. Es la referencia más rápida para sintaxis específica.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('res',null)">← Recursos</button>
+    <span class="page-pos">PY</span>
+    <button class="pn-btn primary" onclick="nav('gl',null)">GLSL Shaders →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE GL — GLSL SHADERS
+═══════════════════════════════════════ -->
+<div class="page" id="gl">
+  <span class="page-kicker">Shaders · GLSL · MAT y GLSL TOP</span>
+  <h1 class="page-title">GLSL: el lenguaje<br>que separa <em>amateurs</em><br>de profesionales.</h1>
+  <p class="page-sub">GLSL (OpenGL Shading Language) corre directamente en la GPU. Con unas 20–30 líneas puedes crear efectos que ningún nodo built-in puede replicar. No es "programación de verdad" — es describir un color o posición en términos matemáticos.</p>
+
+  <div class="callout teal">
+    <div class="c-label">Por qué GLSL importa en TD (Interactive & Immersive HQ)</div>
+    <p>Como dice el Interactive & Immersive HQ: "For many, leveraging GLSL in TouchDesigner is the most critical step towards becoming a professional TD developer. It's one of those skills that separates the amateurs from the pros." Con GLSL tienes acceso directo a la GPU — miles de millones de operaciones en paralelo por frame.</p>
+  </div>
+
+  <h2>Dos contextos de GLSL en TD</h2>
+  <div class="two-col">
+    <div>
+      <h3>GLSL TOP — efectos de imagen</h3>
+      <p>Procesa texturas. Cada pixel de la textura de salida se calcula con tu shader. Accede a las texturas de entrada, coordenadas UV, y cualquier uniform que conectes desde CHOPs.</p>
+    </div>
+    <div>
+      <h3>GLSL MAT — shaders de superficie</h3>
+      <p>Define la apariencia de una superficie 3D. Tienes acceso a la posición del vértice, normal, coordenadas UV y las luces de la escena. El fragment shader decide el color final de cada pixel de la geometría.</p>
+    </div>
+  </div>
+
+  <h3>GLSL TOP: tu primer shader de imagen</h3>
+  <div class="code-block">
+    <div class="code-lang">GLSL TOP — Fragment Shader</div>
+    <code><span class="c-cmt">// Variables disponibles automáticamente en el GLSL TOP:</span>
+<span class="c-cmt">// vUV.st        → coordenadas UV del pixel actual (0.0 a 1.0)</span>
+<span class="c-cmt">// uTD2DInfos[0] → info de la primera textura de entrada</span>
+<span class="c-cmt">// sTD2DInputs[0]→ sampler de la primera textura de entrada</span>
+
+<span class="c-kw">uniform float</span> uTime;      <span class="c-cmt">// conectar LFO CHOP aquí</span>
+<span class="c-kw">uniform float</span> uIntensity; <span class="c-cmt">// conectar otro CHOP de control</span>
+
+<span class="c-kw">out vec4</span> fragColor;
+
+<span class="c-kw">void</span> <span class="c-fn">main</span>()
+{
+    <span class="c-cmt">// Leer la textura de entrada (input 1 del GLSL TOP)</span>
+    <span class="c-kw">vec4</span> inputColor = <span class="c-fn">texture</span>(sTD2DInputs[<span class="c-num">0</span>], vUV.st);
+
+    <span class="c-cmt">// Coordenadas UV centradas en 0,0 (en lugar de 0.5,0.5)</span>
+    <span class="c-kw">vec2</span> uv = vUV.st - <span class="c-num">0.5</span>;
+
+    <span class="c-cmt">// Efecto de distorsión de onda</span>
+    <span class="c-kw">float</span> wave = <span class="c-fn">sin</span>(uv.y * <span class="c-num">20.0</span> + uTime * <span class="c-num">3.0</span>) * <span class="c-num">0.02</span> * uIntensity;
+    <span class="c-kw">vec2</span> distortedUV = vUV.st + <span class="c-kw">vec2</span>(wave, <span class="c-num">0.0</span>);
+
+    <span class="c-cmt">// Leer la textura con las coordenadas distorsionadas</span>
+    <span class="c-kw">vec4</span> distorted = <span class="c-fn">texture</span>(sTD2DInputs[<span class="c-num">0</span>], distortedUV);
+
+    <span class="c-cmt">// Colorización por posición Y</span>
+    <span class="c-kw">vec3</span> colorA = <span class="c-kw">vec3</span>(<span class="c-num">0.1</span>, <span class="c-num">0.4</span>, <span class="c-num">0.9</span>);
+    <span class="c-kw">vec3</span> colorB = <span class="c-kw">vec3</span>(<span class="c-num">0.9</span>, <span class="c-num">0.2</span>, <span class="c-num">0.5</span>);
+    <span class="c-kw">vec3</span> colorGrad = <span class="c-fn">mix</span>(colorA, colorB, vUV.t);
+
+    <span class="c-cmt">// Multiplicar imagen distorsionada por el gradiente</span>
+    fragColor = <span class="c-kw">vec4</span>(distorted.rgb * colorGrad, <span class="c-num">1.0</span>);
+}</code>
+  </div>
+
+  <h3>GLSL MAT: shader de superficie 3D</h3>
+  <div class="code-block">
+    <div class="code-lang">GLSL MAT — Fragment Shader (color por posición en espacio mundo)</div>
+    <code><span class="c-cmt">// Variables disponibles en GLSL MAT fragment shader:</span>
+<span class="c-cmt">// vTEXTCOORD0  → coordenadas UV del mesh (0 a 1)</span>
+<span class="c-cmt">// vWORLDPOS    → posición del pixel en espacio mundo</span>
+<span class="c-cmt">// vNORMAL      → normal del pixel en espacio mundo</span>
+
+<span class="c-kw">uniform float</span> uTime;
+<span class="c-kw">uniform float</span> uColorSpeed;
+<span class="c-kw">uniform sampler2D</span> uNoiseMap;  <span class="c-cmt">// textura conectada como map</span>
+
+<span class="c-kw">out vec4</span> fragColor;
+
+<span class="c-cmt">// Función de paleta de colores (técnica de Inigo Quilez)</span>
+<span class="c-kw">vec3</span> <span class="c-fn">palette</span>(<span class="c-kw">float</span> t) {
+    <span class="c-kw">vec3</span> a = <span class="c-kw">vec3</span>(<span class="c-num">0.5</span>, <span class="c-num">0.5</span>, <span class="c-num">0.5</span>);
+    <span class="c-kw">vec3</span> b = <span class="c-kw">vec3</span>(<span class="c-num">0.5</span>, <span class="c-num">0.5</span>, <span class="c-num">0.5</span>);
+    <span class="c-kw">vec3</span> c = <span class="c-kw">vec3</span>(<span class="c-num">1.0</span>, <span class="c-num">1.0</span>, <span class="c-num">1.0</span>);
+    <span class="c-kw">vec3</span> d = <span class="c-kw">vec3</span>(<span class="c-num">0.263</span>, <span class="c-num">0.416</span>, <span class="c-num">0.557</span>);
+    <span class="c-kw">return</span> a + b * <span class="c-fn">cos</span>(<span class="c-num">6.28318</span> * (c * t + d));
+}
+
+<span class="c-kw">void</span> <span class="c-fn">main</span>()
+{
+    <span class="c-cmt">// Leer mapa de ruido como textura</span>
+    <span class="c-kw">float</span> noise = <span class="c-fn">texture</span>(uNoiseMap, vTEXTCOORD0.xy).r;
+
+    <span class="c-cmt">// Color de paleta animado por posición Y + tiempo + ruido</span>
+    <span class="c-kw">float</span> t = vTEXTCOORD0.y + uTime * uColorSpeed + noise * <span class="c-num">0.3</span>;
+    <span class="c-kw">vec3</span> col = <span class="c-fn">palette</span>(t);
+
+    <span class="c-cmt">// Iluminación simple de Fresnel (brillo en los bordes)</span>
+    <span class="c-kw">vec3</span> viewDir = <span class="c-fn">normalize</span>(-vWORLDPOS);
+    <span class="c-kw">float</span> fresnel = <span class="c-fn">pow</span>(<span class="c-num">1.0</span> - <span class="c-fn">max</span>(<span class="c-fn">dot</span>(vNORMAL, viewDir), <span class="c-num">0.0</span>), <span class="c-num">3.0</span>);
+    col += fresnel * <span class="c-kw">vec3</span>(<span class="c-num">0.5</span>, <span class="c-num">0.8</span>, <span class="c-num">1.0</span>);
+
+    fragColor = <span class="c-kw">vec4</span>(col, <span class="c-num">1.0</span>);
+}</code>
+  </div>
+
+  <h3>Conectar CHOPs como uniforms</h3>
+  <p>Para que los valores de CHOP lleguen al shader como <code>uniform</code>, en el GLSL TOP/MAT → parámetros → <strong>Vectors 1</strong>:</p>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Valor</th><th>Resultado</th></tr>
+    <tr><td>Uniform Name</td><td>uTime</td><td>El nombre del uniform en el shader</td></tr>
+    <tr><td>Value 0</td><td><code>op('lfoTime')[0]</code></td><td>El canal del CHOP que alimenta ese uniform</td></tr>
+    <tr><td>Uniform Name</td><td>uIntensity</td><td>Segundo uniform</td></tr>
+    <tr><td>Value 0</td><td><code>op('audioRMS')[0] * 3</code></td><td>Valor de audio amplificado</td></tr>
+  </table>
+
+  <h3>Las 5 funciones GLSL más útiles para artistas</h3>
+  <div class="code-block">
+    <div class="code-lang">GLSL — Funciones esenciales</div>
+    <code><span class="c-cmt">// mix(a, b, t) → interpolación lineal entre a y b con t [0,1]</span>
+<span class="c-kw">vec3</span> col = <span class="c-fn">mix</span>(colorA, colorB, posY);  <span class="c-cmt">// gradiente de colores</span>
+
+<span class="c-cmt">// smoothstep(edge0, edge1, x) → transición suave entre 0 y 1</span>
+<span class="c-kw">float</span> mask = <span class="c-fn">smoothstep</span>(<span class="c-num">0.3</span>, <span class="c-num">0.7</span>, dist);  <span class="c-cmt">// bordes suaves</span>
+
+<span class="c-cmt">// clamp(x, min, max) → mantener valor en rango</span>
+<span class="c-kw">float</span> safe = <span class="c-fn">clamp</span>(val, <span class="c-num">0.0</span>, <span class="c-num">1.0</span>);
+
+<span class="c-cmt">// fract(x) → parte fraccional (útil para patrones repetitivos)</span>
+<span class="c-kw">float</span> grid = <span class="c-fn">fract</span>(uv.x * <span class="c-num">10.0</span>);  <span class="c-cmt">// crea 10 repeticiones</span>
+
+<span class="c-cmt">// length(v) → magnitud de un vector 2D o 3D</span>
+<span class="c-kw">float</span> dist = <span class="c-fn">length</span>(uv - <span class="c-kw">vec2</span>(<span class="c-num">0.5</span>));  <span class="c-cmt">// distancia al centro</span>
+
+<span class="c-cmt">// Círculo perfecto con bordes suaves:</span>
+<span class="c-kw">float</span> circle = <span class="c-num">1.0</span> - <span class="c-fn">smoothstep</span>(<span class="c-num">0.3</span>, <span class="c-num">0.31</span>, <span class="c-fn">length</span>(uv - <span class="c-kw">vec2</span>(<span class="c-num">0.5</span>)));</code>
+  </div>
+
+  <div class="callout">
+    <div class="c-label">Recurso de referencia: Shadertoy</div>
+    <p><a href="https://shadertoy.com" target="_blank">shadertoy.com</a> es la biblioteca más grande de shaders GLSL del mundo. Los shaders de Shadertoy corren en GLSL estándar que es compatible con TD con mínimas modificaciones (principalmente cambiar <code>mainImage</code> por <code>main</code> y los nombres de las variables built-in). Ver shaders de Shadertoy y estudiar cómo están hechos es el camino más rápido para aprender GLSL para artistas.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('py',null)">← Python</button>
+    <span class="page-pos">GL</span>
+    <button class="pn-btn primary" onclick="nav('arch',null)">Arquitectura →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE ARCH — ARQUITECTURA DE PROYECTOS
+═══════════════════════════════════════ -->
+<div class="page" id="arch">
+  <span class="page-kicker">Craft profesional · Organización y arquitectura</span>
+  <h1 class="page-title">Proyectos que<br><em>no colapsan</em><br>bajo su propio peso.</h1>
+  <p class="page-sub">La diferencia entre un proyecto de hobby y un proyecto de producción profesional no es la calidad visual — es la arquitectura. Los proyectos bien estructurados son extensibles, debuggeables y sobreviven al caos de un performance en vivo.</p>
+
+  <h2>El patrón modular estándar de la industria</h2>
+  <div class="diagram-wrap">
+    <div class="diagram-label">▸ ARQUITECTURA MODULAR — NETWORK PRINCIPAL DE PROYECTO PROFESIONAL</div>
+    <svg viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:500px">
+      <defs>
+        <marker id="ama" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#9B54C4"/></marker>
+      </defs>
+      <!-- Input COMP -->
+      <rect x="10" y="50" width="140" height="100" rx="5" fill="#0D2618" stroke="#54C46E" stroke-width="1.5"/>
+      <rect x="10" y="50" width="140" height="8" rx="5" fill="#54C46E"/>
+      <rect x="10" y="55" width="140" height="2" fill="#54C46E"/>
+      <text x="80" y="76" text-anchor="middle" fill="#90F8A8" font-family="DM Mono,monospace" font-size="10" font-weight="600">INPUT</text>
+      <text x="80" y="92" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">webcam.tox</text>
+      <text x="80" y="105" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">audio.tox</text>
+      <text x="80" y="118" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">mediapipe.tox</text>
+      <text x="80" y="131" text-anchor="middle" fill="#3A9858" font-family="DM Sans,sans-serif" font-size="8.5">osc_in.tox</text>
+      <!-- Process COMP -->
+      <rect x="188" y="30" width="140" height="140" rx="5" fill="#1A0A18" stroke="#FF3CAC" stroke-width="1.5"/>
+      <rect x="188" y="30" width="140" height="8" rx="5" fill="#FF3CAC"/>
+      <rect x="188" y="35" width="140" height="2" fill="#FF3CAC"/>
+      <text x="258" y="56" text-anchor="middle" fill="#FFB0E8" font-family="DM Mono,monospace" font-size="10" font-weight="600">PROCESSING</text>
+      <text x="258" y="72" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">tracking_process.tox</text>
+      <text x="258" y="85" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">audio_analyze.tox</text>
+      <text x="258" y="98" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">optical_flow.tox</text>
+      <text x="258" y="111" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">signal_routing.tox</text>
+      <text x="258" y="124" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">control_ui.tox</text>
+      <text x="258" y="137" text-anchor="middle" fill="#C878C8" font-family="DM Sans,sans-serif" font-size="8.5">state_machine.tox</text>
+      <text x="258" y="153" text-anchor="middle" fill="rgba(200,120,200,.4)" font-family="DM Sans,sans-serif" font-size="7.5">lógica e inteligencia</text>
+      <!-- Visual COMP -->
+      <rect x="366" y="50" width="140" height="100" rx="5" fill="#0D2640" stroke="#4A90D9" stroke-width="1.5"/>
+      <rect x="366" y="50" width="140" height="8" rx="5" fill="#4A90D9"/>
+      <rect x="366" y="55" width="140" height="2" fill="#4A90D9"/>
+      <text x="436" y="76" text-anchor="middle" fill="#90C8F8" font-family="DM Mono,monospace" font-size="10" font-weight="600">VISUALS</text>
+      <text x="436" y="92" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">particles.tox</text>
+      <text x="436" y="105" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">scene_3d.tox</text>
+      <text x="436" y="118" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">effects_2d.tox</text>
+      <text x="436" y="131" text-anchor="middle" fill="#3A6898" font-family="DM Sans,sans-serif" font-size="8.5">compositing.tox</text>
+      <!-- Output COMP -->
+      <rect x="544" y="50" width="140" height="100" rx="5" fill="#0A2A3A" stroke="#00D4FF" stroke-width="1.5"/>
+      <rect x="544" y="50" width="140" height="8" rx="5" fill="#00D4FF"/>
+      <rect x="544" y="55" width="140" height="2" fill="#00D4FF"/>
+      <text x="614" y="76" text-anchor="middle" fill="#A8F8FF" font-family="DM Mono,monospace" font-size="10" font-weight="600">OUTPUT</text>
+      <text x="614" y="92" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="8.5">display_manager.tox</text>
+      <text x="614" y="105" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="8.5">spout_out.tox</text>
+      <text x="614" y="118" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="8.5">osc_out.tox</text>
+      <text x="614" y="131" text-anchor="middle" fill="#50C8E8" font-family="DM Sans,sans-serif" font-size="8.5">recording.tox</text>
+      <!-- Config COMP (bottom) -->
+      <rect x="188" y="185" width="140" height="10" rx="3" fill="#281E04" stroke="#C4A830" stroke-width="1"/>
+      <text x="258" y="193" text-anchor="middle" fill="#C4A830" font-family="DM Mono,monospace" font-size="7.5">config.dat (parámetros globales)</text>
+      <!-- Arrows -->
+      <line x1="150" y1="100" x2="188" y2="100" stroke="#54C46E" stroke-width="2" marker-end="url(#ama)"/>
+      <line x1="328" y1="100" x2="366" y2="100" stroke="#9B54C4" stroke-width="2" marker-end="url(#ama)"/>
+      <line x1="506" y1="100" x2="544" y2="100" stroke="#4A90D9" stroke-width="2" marker-end="url(#ama)"/>
+      <!-- Side note -->
+      <text x="720" y="80" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9">Cada bloque =</text>
+      <text x="720" y="94" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9">Container COMP</text>
+      <text x="720" y="108" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9">guardado como .tox</text>
+      <text x="720" y="122" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9">reutilizable entre</text>
+      <text x="720" y="136" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif" font-size="9">proyectos</text>
+    </svg>
+  </div>
+
+  <h2>Reglas de arquitectura modular</h2>
+  <div class="two-col">
+    <div>
+      <h3>El contrato de un módulo</h3>
+      <p>Cada módulo (Container COMP) debe tener:</p>
+      <ul class="step-list">
+        <li><strong>Inputs definidos:</strong> Los datos que recibe del mundo exterior al módulo, documentados en un Comment</li>
+        <li><strong>Outputs definidos:</strong> Los datos que expone al mundo exterior, con nombres claros</li>
+        <li><strong>Independencia:</strong> Puede testearse por separado con un input de prueba sin el resto del sistema</li>
+        <li><strong>Un propósito único:</strong> Si el módulo hace dos cosas, divídelo en dos</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Comunicación entre módulos</h3>
+      <p>Los módulos se comunican de tres formas:</p>
+      <ul class="step-list">
+        <li><strong>Conexiones directas</strong> (cables entre COMPs) para datos que fluyen secuencialmente — el más claro visualmente</li>
+        <li><strong>Referencias por nombre</strong> (<code>op('modulo/canal')</code>) para accesos transversales sin crear cables largos que cruzan el network</li>
+        <li><strong>Tabla DAT global</strong> (<code>config.dat</code>) para parámetros de configuración compartidos por múltiples módulos</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Sistema de estados para performances en vivo</h2>
+  <p>En un performance interactivo, necesitas poder cambiar entre "escenas" o "estados" sin interrupciones. El patrón estándar es una <strong>State Machine</strong> implementada en Python:</p>
+  <div class="code-block">
+    <div class="code-lang">Python — State Machine básica en Script DAT</div>
+    <code><span class="c-cmt"># State Machine: controla qué escena visual está activa</span>
+states = {
+    <span class="c-str">'idle'</span>:     {<span class="c-str">'particles'</span>: <span class="c-num">0</span>, <span class="c-str">'optical'</span>: <span class="c-num">0</span>, <span class="c-str">'audio'</span>: <span class="c-num">0</span>},
+    <span class="c-str">'ambient'</span>:  {<span class="c-str">'particles'</span>: <span class="c-num">1</span>, <span class="c-str">'optical'</span>: <span class="c-num">0</span>, <span class="c-str">'audio'</span>: <span class="c-num">0</span>},
+    <span class="c-str">'reactive'</span>: {<span class="c-str">'particles'</span>: <span class="c-num">1</span>, <span class="c-str">'optical'</span>: <span class="c-num">1</span>, <span class="c-str">'audio'</span>: <span class="c-num">1</span>},
+    <span class="c-str">'climax'</span>:   {<span class="c-str">'particles'</span>: <span class="c-num">1</span>, <span class="c-str">'optical'</span>: <span class="c-num">1</span>, <span class="c-str">'audio'</span>: <span class="c-num">2</span>},
+}
+current_state = <span class="c-str">'idle'</span>
+
+<span class="c-kw">def</span> <span class="c-fn">transition_to</span>(new_state):
+    <span class="c-kw">global</span> current_state
+    <span class="c-kw">if</span> new_state <span class="c-kw">not in</span> states:
+        <span class="c-kw">return</span>
+    config = states[new_state]
+    <span class="c-cmt"># Activar/desactivar módulos según el nuevo estado</span>
+    op(<span class="c-str">'particles'</span>).par.display = config[<span class="c-str">'particles'</span>]
+    op(<span class="c-str">'optical_flow'</span>).par.display = config[<span class="c-str">'optical'</span>]
+    op(<span class="c-str">'audio_ctrl'</span>).par.value0 = config[<span class="c-str">'audio'</span>]
+    current_state = new_state
+    print(<span class="c-str">f"Transitioning to: {new_state}"</span>)
+
+<span class="c-cmt"># Llamar desde OSC, teclado, o cualquier otro trigger:</span>
+<span class="c-cmt"># transition_to('reactive')</span></code>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('gl',null)">← GLSL</button>
+    <span class="page-pos">AR</span>
+    <button class="pn-btn primary" onclick="nav('perf',null)">Performance →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE PERF — PERFORMANCE PROFILING
+═══════════════════════════════════════ -->
+<div class="page" id="perf">
+  <span class="page-kicker">Performance · Profiling · Optimización avanzada</span>
+  <h1 class="page-title">60fps o nada:<br>optimización<br><em>sistemática</em>.</h1>
+  <p class="page-sub">En una instalación o performance, el framerate bajo es inaceptable. La optimización en TD no es adivinanza — es un proceso sistemático de identificar, medir y resolver cuellos de botella específicos.</p>
+
+  <h2>El proceso de optimización en 4 pasos</h2>
+  <ul class="step-list">
+    <li><strong>Medir primero:</strong> Nunca optimices sin datos. Abre el Performance Monitor (Alt+Shift+P) para ver exactamente qué nodo consume más tiempo de cocina. Sin esta herramienta estás adivinando.</li>
+    <li><strong>Aislar el problema:</strong> Usa Bypass (clic derecho en el nodo sospechoso → Bypass) para desactivarlo temporalmente. Si el framerate sube, ese nodo es el cuello de botella. Si no sube, el problema está en otro lugar.</li>
+    <li><strong>Aplicar la solución correcta:</strong> Cada tipo de cuello de botella tiene su solución específica (ver tabla abajo). Aplicar la solución incorrecta no mejora nada.</li>
+    <li><strong>Medir de nuevo:</strong> Verifica que la optimización tuvo el efecto esperado. A veces resolver un cuello de botella revela uno nuevo debajo.</li>
+  </ul>
+
+  <h2>Cuellos de botella más comunes y sus soluciones</h2>
+  <table class="cmp-table">
+    <tr><th>Síntoma</th><th>Causa probable</th><th>Solución específica</th></tr>
+    <tr>
+      <td>FPS bajo general (&lt;30fps)</td>
+      <td>Un nodo costoso cocinando cada frame</td>
+      <td>Performance Monitor → nodo más lento → Bypass → verificar → reducir resolución o Cook Rate</td>
+    </tr>
+    <tr>
+      <td>Nodo morado en el network</td>
+      <td>Ese nodo cocina más de un frame por ciclo</td>
+      <td>Identificar si es CPU o GPU bound. CPU: reducir resolución o Cook Rate. GPU: bajar calidad del shader o textura</td>
+    </tr>
+    <tr>
+      <td>VRAM llena (GPU overhead)</td>
+      <td>Texturas en alta resolución o muchas texturas en memoria</td>
+      <td>Reducir resolución de TOPs que no se ven directamente. Usar format 8-bit en lugar de 16-bit para texturas sin float precision</td>
+    </tr>
+    <tr>
+      <td>MediaPipe &gt;40% CPU</td>
+      <td>Múltiples modelos activos o resolución alta</td>
+      <td>Desactivar modelos no usados. Mantener resolución de webcam en 720p. Considerar deshabilitar HyperThreading/SMT en BIOS</td>
+    </tr>
+    <tr>
+      <td>Partículas bajas (&lt;10fps)</td>
+      <td>Max Particles demasiado alto para la GPU</td>
+      <td>Bajar Max Particles hasta que FPS sea estable. Regla: empieza en 100K y sube en incrementos de 100K</td>
+    </tr>
+    <tr>
+      <td>Lag entre audio y visuals</td>
+      <td>Buffer de audio grande o procesamiento en cadena muy larga</td>
+      <td>Reducir Audio Buffer Size en los parámetros del Audio Device In CHOP. Verificar que TD no está corriendo en un equipo sobrecargado</td>
+    </tr>
+  </table>
+
+  <h2>Herramientas de profiling integradas en TD</h2>
+  <div class="two-col">
+    <div>
+      <h3>Performance Monitor</h3>
+      <p>Alt + Shift + P abre el Performance Monitor. Muestra el tiempo de cocina de cada operador en milisegundos. Los nodos más costosos aparecen en rojo. Haz clic en un nodo para ver su desglose de tiempo. La columna <strong>GPU Cook Time</strong> es especialmente útil para identificar shaders costosos.</p>
+    </div>
+    <div>
+      <h3>Profiler CHOP</h3>
+      <p>El <code>Profiler CHOP</code> captura métricas de performance como señales en el tiempo — útil para ver picos de carga durante un performance. Conecta sus canales a un CHOP to TOP para visualizar el historial de framerate en tiempo real.</p>
+    </div>
+  </div>
+
+  <h2>Checklist de performance antes de salir a producción</h2>
+  <div class="code-block">
+    <div class="code-lang">Checklist — Pre-performance</div>
+    <code><span class="c-cmt">## TOUCHDESIGNER</span>
+[✓] Perform Mode (F1) — framerate estable ≥ 50fps durante 5 minutos
+[✓] Solo modelos MediaPipe necesarios activados
+[✓] Resolución de TOPs internos reducida (256–512 para proceso)
+[✓] Nodos no usados en Bypass o desconectados
+[✓] Cook Rate de módulos de UI = 10–30fps
+[✓] Max Particles testeado bajo carga máxima
+[✓] Sin ventanas de Python abiertas (consumen memoria)
+
+<span class="c-cmt">## SISTEMA OPERATIVO (Windows)</span>
+[✓] Modo de alto rendimiento en Power Settings
+[✓] Apps en segundo plano cerradas (Slack, Chrome, etc.)
+[✓] Actualizaciones de Windows desactivadas
+[✓] GPU configurada en modo "Prefer Maximum Performance"
+[✓] Drivers de GPU actualizados
+
+<span class="c-cmt">## UNREAL ENGINE (si aplica)</span>
+[✓] Niagara: GPU Simulation activado
+[✓] Post Process: solo efectos esenciales
+[✓] Lumen: calidad balanceada con performance
+[✓] Resolution Scale ajustado si es necesario</code>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('arch',null)">← Arquitectura</button>
+    <span class="page-pos">PF</span>
+    <button class="pn-btn primary" onclick="nav('ruta',null)">Ruta de aprendizaje →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE RUTA — RUTA DE APRENDIZAJE
+═══════════════════════════════════════ -->
+<div class="page" id="ruta">
+  <span class="page-kicker">Estrategia de aprendizaje</span>
+  <h1 class="page-title">De cero a sistema<br>profesional en <em>6 meses</em>.</h1>
+  <p class="page-sub">Esta ruta combina el currículo oficial de Derivative con los ejercicios de esta guía y proyectos reales. El principio fundamental: aprender orientado a proyectos concretos es 5× más eficiente que seguir cursos lineales.</p>
+
+  <div class="callout teal">
+    <div class="c-label">El principio más importante de aprendizaje para artistas</div>
+    <p>Antes de empezar cualquier semana de práctica, define <strong>qué quieres hacer</strong> específicamente. No "aprender partículas" — sino "crear un sistema donde mis manos controlen la emisión de partículas que reaccionen al beat de la música". Ese objetivo concreto guía exactamente qué ejercicios y conceptos necesitas.</p>
+  </div>
+
+  <h2>Mes 1 — Fundamentos sólidos</h2>
+  <table class="cmp-table">
+    <tr><th>Semana</th><th>Foco</th><th>Recursos</th><th>Proyecto de práctica</th></tr>
+    <tr>
+      <td>1–2</td>
+      <td>Entorno de TD + familias de operadores</td>
+      <td>learn.derivative.ca 100 Series lecciones 1–20. Esta guía: páginas 00–03.</td>
+      <td>Reproducir exactamente los ejemplos de OP Snippets de 5 TOPs y 5 CHOPs diferentes</td>
+    </tr>
+    <tr>
+      <td>3–4</td>
+      <td>TOPs + CHOPs + primeras expresiones Python</td>
+      <td>100 Series lecciones 21–40. Ejercicios 1A, 1B y 2 de esta guía.</td>
+      <td>Feedback loop propio + LFO controlando 3 parámetros diferentes simultáneamente</td>
+    </tr>
+  </table>
+
+  <h2>Mes 2 — Sistemas reactivos</h2>
+  <table class="cmp-table">
+    <tr><th>Semana</th><th>Foco</th><th>Recursos</th><th>Proyecto de práctica</th></tr>
+    <tr>
+      <td>5–6</td>
+      <td>SOPs + pipeline 3D + audio reactivo</td>
+      <td>100 Series lecciones 41–60. Ejercicios 3 y 5 de esta guía.</td>
+      <td>Geometría 3D que se deforma con el audio en tiempo real</td>
+    </tr>
+    <tr>
+      <td>7–8</td>
+      <td>Webcam tracking + primer sistema interactivo</td>
+      <td>Plugin MediaPipe. Ejercicio 6 de esta guía.</td>
+      <td>Sistema de "pintura" con movimiento corporal + efectos de audio simultáneos</td>
+    </tr>
+  </table>
+
+  <h2>Mes 3–4 — Sistemas avanzados</h2>
+  <table class="cmp-table">
+    <tr><th>Semana</th><th>Foco</th><th>Recursos</th><th>Proyecto de práctica</th></tr>
+    <tr>
+      <td>9–12</td>
+      <td>Partículas + Instancing + Python básico</td>
+      <td>200 Series (learn.derivative.ca). Ejercicios 7 y 8. Página Python de esta guía.</td>
+      <td>Sistema de partículas completo con tracking, audio y Optical Flow combinados</td>
+    </tr>
+    <tr>
+      <td>13–16</td>
+      <td>GLSL + arquitectura de proyecto real</td>
+      <td>Shadertoy para referencia. Páginas GLSL y Arquitectura de esta guía.</td>
+      <td>Primer proyecto de instalación (aunque sea pequeña): 10 minutos de performance interactivo</td>
+    </tr>
+  </table>
+
+  <h2>Mes 5–6 — Integración con Unreal Engine</h2>
+  <table class="cmp-table">
+    <tr><th>Semana</th><th>Foco</th><th>Recursos</th><th>Proyecto de práctica</th></tr>
+    <tr>
+      <td>17–20</td>
+      <td>OSC + Spout + pipeline básico TD→UE5</td>
+      <td>Páginas UE1–UE3 de esta guía. Plugin OWL Spout (gratis).</td>
+      <td>Sistema del ejercicio 7 renderizado en UE5 con Niagara y Lumen</td>
+    </tr>
+    <tr>
+      <td>21–24</td>
+      <td>TouchEngine (si tienes licencia) o profundizar en OSC+Spout</td>
+      <td>TouchEngine-UE GitHub oficial. Páginas UE4–UE6 de esta guía.</td>
+      <td>Pipeline completo de producción: webcam → TD → UE5 → pantalla. Suficiente para portfolio.</td>
+    </tr>
+  </table>
+
+  <h2>Qué hacer cuando estás atascado</h2>
+  <div class="three-col">
+    <div class="callout teal" style="margin:0">
+      <div class="c-label">Primero: OP Snippets</div>
+      <p>Help → OP Snippets en TD. Busca el operador específico donde estás atascado. El 80% de los problemas técnicos se resuelven viendo cómo funciona el operador en su ejemplo oficial.</p>
+    </div>
+    <div class="callout" style="margin:0">
+      <div class="c-label">Segundo: Foro oficial</div>
+      <p>forum.derivative.ca — busca antes de preguntar. La mayoría de problemas ya tiene respuesta. Si no la encuentras, describe exactamente qué haces, qué esperas y qué pasa en su lugar.</p>
+    </div>
+    <div class="callout slate" style="margin:0">
+      <div class="c-label">Tercero: Simplifica</div>
+      <p>Cuando algo falla, reduce el sistema al mínimo posible. ¿Funciona con un solo nodo? ¿Con dos? El proceso de simplificar casi siempre revela exactamente dónde está el problema.</p>
+    </div>
+  </div>
+
+  <div class="callout jade mt24">
+    <div class="c-label">El meta-aprendizaje más importante</div>
+    <p>TouchDesigner es una plataforma viva — se actualiza continuamente. Los POPs de 2024–2025 son un ejemplo de cómo el software puede cambiar significativamente. La habilidad más valiosa a largo plazo no es dominar operadores específicos, sino <strong>aprender a aprender en TD</strong>: saber usar la documentación, los OP Snippets y la comunidad para resolver cualquier problema nuevo que aparezca. Con esa habilidad, mantenerse actualizado es natural.</p>
+  </div>
+
+  <div class="page-nav">
+    <button class="pn-btn" onclick="nav('perf',null)">← Performance</button>
+    <span class="page-pos">→ / Fin</span>
+    <button class="pn-btn primary" onclick="nav('p0',null)">↑ Inicio</button>
+  </div>
+</div>
+</body>
+</html>
